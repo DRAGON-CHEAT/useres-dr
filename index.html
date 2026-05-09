@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Dragon TV Services</title>
-    <!-- استخدام نفس المكتبات التي تعمل عندك -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
@@ -33,7 +32,6 @@
 </div>
 
 <script>
-// إعدادات مشروعك الحالي drag-9user
 const firebaseConfig = {
   apiKey: "AIzaSyCPVNySqB8Y21s_DJnn-jZFIb77UagAr4k",
   authDomain: "drag-9user.firebaseapp.com",
@@ -47,29 +45,36 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// دالة لجلب ID جهاز تقريبي من المتصفح
-function getID() { return navigator.userAgent.length + "-" + Math.floor(Math.random() * 10000); }
+// تحديد معرف الجهاز
+let deviceId = localStorage.getItem('deviceId') || (navigator.userAgent.length + "-" + Math.floor(Math.random() * 10000));
+localStorage.setItem('deviceId', deviceId);
+
+// دخول تلقائي عند فتح الصفحة
+window.onload = function() {
+    const savedUser = localStorage.getItem("user");
+    const savedPass = localStorage.getItem("pass");
+    if(savedUser && savedPass) {
+        processLogin(savedUser, savedPass, true);
+    }
+};
 
 function register() {
     const user = document.getElementById('userField').value.trim();
     const msg = document.getElementById('statusMsg');
-    if(!user) return;
+    if(user.length < 8) { msg.innerText = "⚠ الاسم يجب أن يكون ثنائي"; return; }
 
-    // التحقق إذا كان المستخدم موجوداً مسبقاً
     db.ref("users/" + user).once("value").then((snap) => {
         if(snap.exists()) {
-            msg.style.color = "orange";
-            msg.innerText = "هذا المستخدم موجود بالفعل، يرجى تسجيل الدخول";
+            msg.innerText = "هذا المستخدم موجود بالفعل";
         } else {
-            // إنشاؤه فقط إذا لم يكن موجوداً
             db.ref("users/" + user).set({
                 username: user,
-                currentDevice: getID(),
+                currentDevice: deviceId,
                 expirydate: "",
                 password: ""
             }).then(() => {
                 msg.style.color = "yellow";
-                msg.innerText = "تم إرسال الطلب، يرجى مراسلتنا لتفعيل اشتراكك";
+                msg.innerText = "تم إرسال الطلب، يرجى مراسلتنا";
             });
         }
     });
@@ -78,30 +83,48 @@ function register() {
 function login() {
     const user = document.getElementById('userField').value.trim();
     const pass = document.getElementById('passField').value.trim();
+    processLogin(user, pass, false);
+}
+
+function processLogin(user, pass, isAuto) {
     const msg = document.getElementById('statusMsg');
+    if(!user || !pass) return;
 
     db.ref("users/" + user).once("value").then((snap) => {
         if(snap.exists()){
             const data = snap.val();
-            if(data.password && data.password.toString() === pass) {
-                msg.style.color = "lime";
-                msg.innerText = "تم التحقق بنجاح..";
-                
-                // استدعاء الجسر البرمجي لإغلاق الأكتيفيتي في الأندرويد
-                if(window.Android) {
-                    window.Android.closeWindow();
-                }
-            } else {
-                msg.style.color = "red";
-                msg.innerText = "الباسورد خطأ أو الحساب لم يفعل";
+            
+            // 1. تحقق التاريخ
+            if(data.expirydate && new Date(data.expirydate) < new Date()) {
+                db.ref("users/" + user + "/password").set(""); // حذف الباسورد
+                localStorage.clear();
+                msg.innerText = "⚠ انتهى اشتراكك";
+                return;
             }
-        } else {
-            msg.style.color = "red";
-            msg.innerText = "المستخدم غير موجود";
+
+            // 2. تحقق الجهاز
+            if(data.currentDevice && data.currentDevice !== deviceId) {
+                msg.innerText = "⚠ الحساب مفتوح على جهاز آخر";
+                return;
+            }
+
+            // 3. تحقق الباسورد
+            if(data.password && data.password.toString() === pass) {
+                localStorage.setItem("user", user);
+                localStorage.setItem("pass", pass);
+                if(!isAuto) {
+                    msg.style.color = "lime";
+                    msg.innerText = "تم التحقق بنجاح..";
+                }
+                setTimeout(() => {
+                    if(window.Android) { window.Android.closeWindow(); }
+                }, 1000);
+            } else {
+                msg.innerText = "الباسورد خطأ";
+            }
         }
     });
 }
-
 </script>
 </body>
 </html>
