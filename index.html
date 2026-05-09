@@ -3,101 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <title>Dragon TV Services</title>
-    <!-- استخدام مكتبات متوافقة لضمان الاتصال -->
-    <script src="https://gstatic.com"></script>
-    <script src="https://gstatic.com"></script>
+    <!-- استخدام نفس المكتبات التي تعمل عندك -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
     <style>
-        body { background-color: #0d0d0d; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: #1a1a1a; padding: 30px; border-radius: 15px; box-shadow: 0 0 20px red; width: 320px; text-align: center; border-top: 4px solid red; }
-        h1 { color: red; margin: 0 0 20px 0; font-size: 24px; }
-        input { width: 100%; padding: 12px; margin-bottom: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 5px; box-sizing: border-box; text-align: center; }
+        body { background-color: #000; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .dragon-card { background: #111; padding: 30px; border-radius: 15px; border-top: 4px solid #ff0000; width: 320px; text-align: center; box-shadow: 0 0 20px rgba(255,0,0,0.3); }
+        h1 { color: #ff0000; margin-bottom: 20px; text-shadow: 0 0 10px #ff0000; }
+        input { width: 100%; padding: 12px; margin-bottom: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; text-align: center; }
         .btns { display: flex; gap: 5px; }
-        button { flex: 1; padding: 12px; cursor: pointer; font-weight: bold; border-radius: 5px; border: none; transition: 0.3s; }
-        .btn-send { background: red; color: white; }
-        .btn-login { background: #333; color: white; }
+        button { flex: 1; padding: 12px; cursor: pointer; font-weight: bold; border-radius: 8px; border: none; transition: 0.3s; }
+        .btn-reg { background: #ff0000; color: white; }
+        .btn-log { background: #333; color: white; }
         #statusMsg { margin-top: 15px; font-size: 14px; min-height: 20px; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h1>Dragon TV Services</h1>
+<div class="dragon-card">
+    <h1>Dragon TV</h1>
     <input type="text" id="userField" placeholder="الاسم الثنائي والمواليد">
     <input type="password" id="passField" placeholder="كلمة المرور">
     <div class="btns">
-        <button class="btn-send" onclick="registerUser()">ارسال الطلب</button>
-        <button class="btn-login" onclick="checkLogin()">تسجيل دخول</button>
+        <button class="btn-reg" onclick="register()">ارسال الطلب</button>
+        <button class="btn-log" onclick="login()">تسجيل دخول</button>
     </div>
     <div id="statusMsg"></div>
 </div>
 
 <script>
-    // الإعدادات مأخوذة مباشرة من ملف json الخاص بك
-    const firebaseConfig = {
-        apiKey: "AIzaSyAh1Jn1z540AaLOcY9HzO0TaCAl6-Ldr98",
-        databaseURL: "https://drag-9user-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "drag-9user"
-    };
+// إعدادات مشروعك الحالي drag-9user
+const firebaseConfig = {
+  apiKey: "AIzaSyCPVNySqB8Y21s_DJnn-jZFIb77UagAr4k",
+  authDomain: "drag-9user.firebaseapp.com",
+  databaseURL: "https://drag-9user-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "drag-9user",
+  storageBucket: "drag-9user.firebasestorage.app",
+  messagingSenderId: "716759119906",
+  appId: "1:716759119906:web:4b522ed58dba7bf623727b"
+};
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-    // دالة توليد ID فريد للجهاز (بصمة المتصفح)
-    function getDeviceFingerprint() {
-        return 'device-' + Math.random().toString(36).substr(2, 9) + '-' + navigator.userAgent.length;
-    }
+// دالة لجلب ID جهاز تقريبي من المتصفح
+function getID() { return navigator.userAgent.length + "-" + Math.floor(Math.random() * 10000); }
 
-    // 1. إرسال الطلب (إضافة المستخدم في نود users)
-    function registerUser() {
-        const user = document.getElementById('userField').value.trim();
-        const msg = document.getElementById('statusMsg');
-        
-        if(!user) { alert("أدخل اسمك أولاً"); return; }
+function register() {
+    const user = document.getElementById('userField').value.trim();
+    const msg = document.getElementById('statusMsg');
+    if(!user) return;
 
-        db.ref('users/' + user).set({
-            "username": user,
-            "currentDevice": getDeviceFingerprint(),
-            "password": "", 
-            "expirydate": ""
-        }).then(() => {
-            msg.style.color = "#ffeb3b";
-            msg.innerHTML = "تم الإرسال.. يرجى مراسلتنا لتفعيل اشتراكك";
-        }).catch(err => {
-            msg.style.color = "red";
-            msg.innerHTML = "خطأ: تأكد من إعدادات Rules في Firebase";
-        });
-    }
+    db.ref("users/" + user).set({
+        username: user,
+        currentDevice: getID(),
+        expirydate: "",
+        password: ""
+    }).then(() => {
+        msg.style.color = "yellow";
+        msg.innerText = "يرجى مراسلتنا لتفعيل اشتراكك";
+    }).catch(err => { alert("خطأ في الاتصال"); });
+}
 
-    // 2. تسجيل الدخول والتحقق
-    function checkLogin() {
-        const user = document.getElementById('userField').value.trim();
-        const pass = document.getElementById('passField').value.trim();
-        const msg = document.getElementById('statusMsg');
+function login() {
+    const user = document.getElementById('userField').value.trim();
+    const pass = document.getElementById('passField').value.trim();
+    const msg = document.getElementById('statusMsg');
 
-        if(!user || !pass) { alert("اكمل الحقول"); return; }
-
-        db.ref('users/' + user).once('value').then((snapshot) => {
-            if(snapshot.exists()) {
-                const data = snapshot.val();
-                // التحقق من الباسورد (يجب أن تكتبه أنت يدوياً في القاعدة أولاً)
-                if(data.password && data.password.toString() === pass) {
-                    msg.style.color = "#4caf50";
-                    msg.innerHTML = "تم التحقق.. جاري الدخول";
-                    // أمر إغلاق الـ WebView
-                    setTimeout(() => { 
-                        if(window.AndroidInvoker) { window.AndroidInvoker.close(); }
-                        else { window.close(); }
-                    }, 1500);
-                } else {
-                    msg.style.color = "red";
-                    msg.innerHTML = "الباسورد خطأ أو الحساب لم يفعل بعد";
-                }
+    db.ref("users/" + user).once("value").then((snap) => {
+        if(snap.exists()){
+            const data = snap.val();
+            if(data.password && data.password.toString() === pass) {
+                msg.style.color = "lime";
+                msg.innerText = "تم التحقق بنجاح..";
+                // كود إغلاق الـ WebView
+                setTimeout(() => {
+                    if(window.AndroidInvoker) { window.AndroidInvoker.close(); }
+                    else { window.close(); }
+                }, 1000);
             } else {
                 msg.style.color = "red";
-                msg.innerHTML = "المستخدم غير موجود";
+                msg.innerText = "الباسورد خطأ أو لم يفعل الحساب";
             }
-        });
-    }
+        } else {
+            msg.style.color = "red";
+            msg.innerText = "المستخدم غير موجود";
+        }
+    });
+}
 </script>
 </body>
 </html>
