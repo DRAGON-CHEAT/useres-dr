@@ -55,15 +55,24 @@ function register() {
     const msg = document.getElementById('statusMsg');
     if(!user) return;
 
-    db.ref("users/" + user).set({
-        username: user,
-        currentDevice: getID(),
-        expirydate: "",
-        password: ""
-    }).then(() => {
-        msg.style.color = "yellow";
-        msg.innerText = "يرجى مراسلتنا لتفعيل اشتراكك";
-    }).catch(err => { alert("خطأ في الاتصال"); });
+    // التحقق إذا كان المستخدم موجوداً مسبقاً
+    db.ref("users/" + user).once("value").then((snap) => {
+        if(snap.exists()) {
+            msg.style.color = "orange";
+            msg.innerText = "هذا المستخدم موجود بالفعل، يرجى تسجيل الدخول";
+        } else {
+            // إنشاؤه فقط إذا لم يكن موجوداً
+            db.ref("users/" + user).set({
+                username: user,
+                currentDevice: getID(),
+                expirydate: "",
+                password: ""
+            }).then(() => {
+                msg.style.color = "yellow";
+                msg.innerText = "تم إرسال الطلب، يرجى مراسلتنا لتفعيل اشتراكك";
+            });
+        }
+    });
 }
 
 function login() {
@@ -77,14 +86,14 @@ function login() {
             if(data.password && data.password.toString() === pass) {
                 msg.style.color = "lime";
                 msg.innerText = "تم التحقق بنجاح..";
-                // كود إغلاق الـ WebView
-                setTimeout(() => {
-                    if(window.AndroidInvoker) { window.AndroidInvoker.close(); }
-                    else { window.close(); }
-                }, 1000);
+                
+                // استدعاء الجسر البرمجي لإغلاق الأكتيفيتي في الأندرويد
+                if(window.Android) {
+                    window.Android.closeWindow();
+                }
             } else {
                 msg.style.color = "red";
-                msg.innerText = "الباسورد خطأ أو لم يفعل الحساب";
+                msg.innerText = "الباسورد خطأ أو الحساب لم يفعل";
             }
         } else {
             msg.style.color = "red";
@@ -92,6 +101,7 @@ function login() {
         }
     });
 }
+
 </script>
 </body>
 </html>
