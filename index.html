@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dragon TV Services</title>
+    
+    <style>
+        body {
+            background-color: #0d0d0d;
+            color: #ffffff;
+            font-family: 'Cairo', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        .login-card {
+            background: #1a1a1a;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.3);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            border-top: 4px solid #ff0000;
+        }
+        h1 {
+            color: #ff0000;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+        }
+        .subtitle { color: #888; margin-bottom: 30px; font-size: 0.9rem; }
+        .input-group { margin-bottom: 20px; text-align: right; }
+        label { display: block; margin-bottom: 8px; color: #ccc; font-size: 0.85rem; }
+        input {
+            width: 100%;
+            padding: 12px;
+            background: #262626;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            transition: 0.3s;
+            box-sizing: border-box;
+        }
+        input:focus { border-color: #ff0000; box-shadow: 0 0 8px rgba(255, 0, 0, 0.2); }
+        .buttons { display: flex; gap: 10px; margin-top: 25px; }
+        button {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.95rem;
+            transition: 0.3s;
+        }
+        .btn-request { background: #ff0000; color: white; }
+        .btn-login { background: #333; color: white; }
+        button:hover { transform: translateY(-3px); opacity: 0.9; }
+        #msg { margin-top: 15px; font-size: 0.9rem; min-height: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <h1>Dragon TV</h1>
+    <div class="subtitle">خدمات الاشتراك المميزة</div>
+
+    <div class="input-group">
+        <label>اسم المستخدم (الثنائي والمواليد)</label>
+        <input type="text" id="username" placeholder="مثال: 1992 علاء فاضل">
+    </div>
+
+    <div class="input-group">
+        <label>كلمة المرور</label>
+        <input type="password" id="password" placeholder="******">
+    </div>
+
+    <div class="buttons">
+        <button class="btn-request" onclick="handleRequest()">ارسال الطلب</button>
+        <button class="btn-login" onclick="handleLogin()">تسجيل دخول</button>
+    </div>
+    
+    <div id="msg"></div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://gstatic.com";
+    import { getDatabase, ref, get, set } from "https://gstatic.com";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCPVNySqB8Y21s_DJnn-jZFIb77UagAr4k",
+        authDomain: "drag-9user.firebaseapp.com",
+        databaseURL: "https://drag-9user-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "drag-9user",
+        storageBucket: "drag-9user.firebasestorage.app",
+        messagingSenderId: "716759119906",
+        appId: "1:716759119906:web:4b522ed58dba7bf623727b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // تسجيل الدخول والتحقق من البيانات
+    window.handleLogin = async () => {
+        const user = document.getElementById('username').value.trim();
+        const pass = document.getElementById('password').value.trim();
+        const msg = document.getElementById('msg');
+
+        if (!user || !pass) { msg.innerHTML = "يرجى إدخال البيانات"; return; }
+
+        const userRef = ref(db, 'users/' + user);
+        try {
+            const snapshot = await get(userRef);
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                if (String(data.password) === pass) {
+                    msg.style.color = "#00ff00";
+                    msg.innerHTML = "تم الدخول بنجاح! ينتهي في: " + (data.expirydate || "غير محدد");
+                } else {
+                    msg.style.color = "#ff0000";
+                    msg.innerHTML = "كلمة المرور غير صحيحة";
+                }
+            } else {
+                msg.style.color = "#ff0000";
+                msg.innerHTML = "المستخدم غير مسجل لدينا";
+            }
+        } catch (e) { msg.innerHTML = "خطأ في الاتصال"; }
+    };
+
+    // إرسال طلب جديد
+    window.handleRequest = async () => {
+        const user = document.getElementById('username').value.trim();
+        const pass = document.getElementById('password').value.trim();
+        if (!user || !pass) { alert("أكمل البيانات أولاً"); return; }
+
+        const reqRef = ref(db, 'requests/' + user);
+        await set(reqRef, { username: user, password: pass, date: new Date().toLocaleDateString() });
+        alert("تم إرسال طلبك للإدارة");
+    };
+</script>
+
+</body>
+</html>
