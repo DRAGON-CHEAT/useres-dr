@@ -45,11 +45,24 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// تحديد معرف الجهاز
-let deviceId = localStorage.getItem('deviceId') || (navigator.userAgent.length + "-" + Math.floor(Math.random() * 10000));
-localStorage.setItem('deviceId', deviceId);
+// دالة توليد معرف جهاز ثابت (بصمة المتصفح)
+function generatePersistentID() {
+    const info = window.navigator.userAgent + window.navigator.language + window.screen.width + window.screen.height;
+    let hash = 0;
+    for (let i = 0; i < info.length; i++) {
+        hash = (hash << 5) - hash + info.charCodeAt(i);
+        hash |= 0;
+    }
+    return "DRG-" + Math.abs(hash);
+}
 
-// دخول تلقائي عند فتح الصفحة
+// تثبيت الـ ID بحيث لا يتغير أبداً
+let deviceId = localStorage.getItem('deviceId');
+if (!deviceId) {
+    deviceId = generatePersistentID();
+    localStorage.setItem('deviceId', deviceId);
+}
+
 window.onload = function() {
     const savedUser = localStorage.getItem("user");
     const savedPass = localStorage.getItem("pass");
@@ -94,17 +107,19 @@ function processLogin(user, pass, isAuto) {
         if(snap.exists()){
             const data = snap.val();
             
-            // 1. تحقق التاريخ
+            // 1. تحقق التاريخ (معدل: لا يحذف الـ deviceId من المتصفح)
             if(data.expirydate && new Date(data.expirydate) < new Date()) {
-                db.ref("users/" + user + "/password").set(""); // حذف الباسورد
-                localStorage.clear();
+                db.ref("users/" + user + "/password").set(""); 
+                localStorage.removeItem("user");
+                localStorage.removeItem("pass");
                 msg.innerText = "⚠ انتهى اشتراكك";
                 return;
             }
 
-            // 2. تحقق الجهاز
+            // 2. تحقق الجهاز (معدل: يعتمد على البصمة الثابتة)
             if(data.currentDevice && data.currentDevice !== deviceId) {
-                msg.innerText = "⚠ الحساب مفتوح على جهاز آخر";
+                msg.style.color = "red";
+                msg.innerText = "⚠ حسابك مفتوح على جهاز آخر";
                 return;
             }
 
