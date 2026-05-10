@@ -56,12 +56,27 @@ function generatePersistentID() {
     return "DRG-" + Math.abs(hash);
 }
 
-// تثبيت الـ ID بحيث لا يتغير أبداً
 let deviceId = localStorage.getItem('deviceId');
 if (!deviceId) {
     deviceId = generatePersistentID();
     localStorage.setItem('deviceId', deviceId);
 }
+
+// دالة تسجيل الخروج (يتم استدعاؤها من زر التطبيق Smali)
+window.clearDeviceSession = function() {
+    const user = localStorage.getItem("user");
+    if (user) {
+        // حذف المعرف من قاعدة البيانات
+        db.ref("users/" + user + "/currentDevice").set("").then(() => {
+            // حذف البيانات من الجهاز الحالي
+            localStorage.removeItem("user");
+            localStorage.removeItem("pass");
+            // ملاحظة: لا نحذف deviceId لنحافظ على بصمة الجهاز ثابتة للمستقبل
+            alert("تم تسجيل الخروج بنجاح. يمكنك الآن الدخول من جهاز آخر.");
+            location.reload();
+        });
+    }
+};
 
 window.onload = function() {
     const savedUser = localStorage.getItem("user");
@@ -107,7 +122,7 @@ function processLogin(user, pass, isAuto) {
         if(snap.exists()){
             const data = snap.val();
             
-            // 1. تحقق التاريخ (معدل: لا يحذف الـ deviceId من المتصفح)
+            // 1. تحقق التاريخ
             if(data.expirydate && new Date(data.expirydate) < new Date()) {
                 db.ref("users/" + user + "/password").set(""); 
                 localStorage.removeItem("user");
@@ -116,8 +131,12 @@ function processLogin(user, pass, isAuto) {
                 return;
             }
 
-            // 2. تحقق الجهاز (معدل: يعتمد على البصمة الثابتة)
-            if(data.currentDevice && data.currentDevice !== deviceId) {
+            // 2. تحقق الجهاز مع ميزة التبديل
+            if (!data.currentDevice || data.currentDevice === "") {
+                // إذا كانت الخانة فارغة (بعد تسجيل الخروج)، نسجل الجهاز الجديد فوراً
+                db.ref("users/" + user + "/currentDevice").set(deviceId);
+            } else if (data.currentDevice !== deviceId) {
+                // إذا كان هناك جهاز مسجل ومختلف عن الحالي
                 msg.style.color = "red";
                 msg.innerText = "⚠ حسابك مفتوح على جهاز آخر";
                 return;
