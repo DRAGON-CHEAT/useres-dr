@@ -45,7 +45,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// دالة توليد معرف جهاز ثابت (بصمة المتصفح)
+// 1. توليد بصمة ثابتة للجهاز (لا تتغير أبداً)
 function generatePersistentID() {
     const info = window.navigator.userAgent + window.navigator.language + window.screen.width + window.screen.height;
     let hash = 0;
@@ -62,23 +62,31 @@ if (!deviceId) {
     localStorage.setItem('deviceId', deviceId);
 }
 
-// دالة تسجيل الخروج (يتم استدعاؤها من زر التطبيق Smali)
+// 2. دالة تسجيل الخروج وتصفير الجلسة (مسح ID من فايربيس)
 window.clearDeviceSession = function() {
     const user = localStorage.getItem("user");
     if (user) {
-        // حذف المعرف من قاعدة البيانات
         db.ref("users/" + user + "/currentDevice").set("").then(() => {
-            // حذف البيانات من الجهاز الحالي
             localStorage.removeItem("user");
             localStorage.removeItem("pass");
-            // ملاحظة: لا نحذف deviceId لنحافظ على بصمة الجهاز ثابتة للمستقبل
-            alert("تم تسجيل الخروج بنجاح. يمكنك الآن الدخول من جهاز آخر.");
-            location.reload();
+            alert("تم تسجيل الخروج بنجاح. يمكنك الدخول من جهاز آخر.");
+            location.href = "https://github.io"; // إعادة توجيه للرابط النظيف
         });
+    } else {
+        // في حال تم استدعاؤها ولم يكن هناك مستخدم مسجل
+        if(window.Android) { window.Android.closeWindow(); }
     }
 };
 
+// 3. معالج التحميل (دخول تلقائي أو تنفيذ أمر خروج)
 window.onload = function() {
+    // التحقق من وجود أمر خروج في الرابط
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('action') === 'logout') {
+        clearDeviceSession();
+        return;
+    }
+
     const savedUser = localStorage.getItem("user");
     const savedPass = localStorage.getItem("pass");
     if(savedUser && savedPass) {
@@ -122,7 +130,7 @@ function processLogin(user, pass, isAuto) {
         if(snap.exists()){
             const data = snap.val();
             
-            // 1. تحقق التاريخ
+            // تحقق التاريخ
             if(data.expirydate && new Date(data.expirydate) < new Date()) {
                 db.ref("users/" + user + "/password").set(""); 
                 localStorage.removeItem("user");
@@ -131,18 +139,16 @@ function processLogin(user, pass, isAuto) {
                 return;
             }
 
-            // 2. تحقق الجهاز مع ميزة التبديل
+            // تحقق الجهاز (تبديل تلقائي إذا كانت الخانة فارغة)
             if (!data.currentDevice || data.currentDevice === "") {
-                // إذا كانت الخانة فارغة (بعد تسجيل الخروج)، نسجل الجهاز الجديد فوراً
                 db.ref("users/" + user + "/currentDevice").set(deviceId);
             } else if (data.currentDevice !== deviceId) {
-                // إذا كان هناك جهاز مسجل ومختلف عن الحالي
                 msg.style.color = "red";
                 msg.innerText = "⚠ حسابك مفتوح على جهاز آخر";
                 return;
             }
 
-            // 3. تحقق الباسورد
+            // تحقق الباسورد
             if(data.password && data.password.toString() === pass) {
                 localStorage.setItem("user", user);
                 localStorage.setItem("pass", pass);
