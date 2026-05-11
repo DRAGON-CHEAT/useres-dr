@@ -66,10 +66,12 @@ window.clearDeviceSession = function() {
             if (data && data.currentDevice === deviceId) {
                 db.ref("users/" + user + "/currentDevice").set("").then(() => {
                     localStorage.clear();
-                    // مسح الجلسة من ملفات الأندرويد
+                    
+                    // --- إضافة: مسح البيانات من ملفات الأندرويد ---
                     if(window.Android && window.Android.clearUserSession) {
                         window.Android.clearUserSession();
                     }
+                    
                     alert("تم تسجيل الخروج بنجاح.");
                     if(window.Android) { window.Android.closeWindow(); } else { location.reload(); }
                 });
@@ -151,13 +153,17 @@ function processLogin(user, pass, isAuto) {
             if(data.password && data.password.toString() === pass) {
                 localStorage.setItem("user", user);
                 localStorage.setItem("pass", pass);
-                // حفظ الجلسة في ملفات الأندرويد لتخطي النافذة مستقبلاً
+                
+                // --- إضافة: حفظ الجلسة في ملفات الأندرويد ---
                 if(window.Android && window.Android.saveUserSession) {
                     window.Android.saveUserSession(user, pass);
                 }
+
                 if(!isAuto) {
                     msg.style.color = "lime";
                     msg.innerText = "تم التحقق بنجاح..";
+                    
+                    // تأخير بسيط ثانية واحدة لضمان تمام الحفظ في النظام قبل إغلاق النافذة
                     setTimeout(() => {
                         if(window.Android) { window.Android.closeWindow(); }
                     }, 1000);
