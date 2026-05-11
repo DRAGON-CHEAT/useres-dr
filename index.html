@@ -47,7 +47,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// 1. توليد ايدي عشوائي (رقم-رقم)
 function generateRandomID() {
     let id = localStorage.getItem('deviceId');
     if (!id) {
@@ -58,7 +57,6 @@ function generateRandomID() {
 }
 const deviceId = generateRandomID();
 
-// 2. دالة تسجيل الخروج والمقارنة مع السيرفر
 window.clearDeviceSession = function() {
     const user = localStorage.getItem("user");
     const msg = document.getElementById('statusMsg');
@@ -68,6 +66,10 @@ window.clearDeviceSession = function() {
             if (data && data.currentDevice === deviceId) {
                 db.ref("users/" + user + "/currentDevice").set("").then(() => {
                     localStorage.clear();
+                    // مسح الجلسة من ملفات الأندرويد
+                    if(window.Android && window.Android.clearUserSession) {
+                        window.Android.clearUserSession();
+                    }
                     alert("تم تسجيل الخروج بنجاح.");
                     if(window.Android) { window.Android.closeWindow(); } else { location.reload(); }
                 });
@@ -79,7 +81,6 @@ window.clearDeviceSession = function() {
     }
 };
 
-// 3. معالج التحميل للتحكم بالواجهات
 window.onload = function() {
     const urlParams = new URLSearchParams(window.location.search);
     const isLogoutMode = urlParams.get('action') === 'logout';
@@ -87,14 +88,12 @@ window.onload = function() {
     const savedPass = localStorage.getItem("pass");
 
     if (isLogoutMode && savedUser) {
-        // وضع تسجيل الخروج: يمنع الدخول التلقائي ويظهر واجهة المسح
         document.getElementById('userField').value = savedUser;
         document.getElementById('userField').readOnly = true;
         document.getElementById('passField').style.display = "none";
         document.getElementById('mainBtns').style.display = "none";
         document.getElementById('outBtn').style.display = "block";
     } else if(savedUser && savedPass) {
-        // وضع الدخول التلقائي عند فتح التطبيق العادي
         document.getElementById('userField').value = savedUser;
         document.getElementById('passField').value = savedPass;
         processLogin(savedUser, savedPass, true);
@@ -127,26 +126,20 @@ function login() {
     const user = document.getElementById('userField').value.trim();
     const pass = document.getElementById('passField').value.trim();
     const msg = document.getElementById('statusMsg');
-
     if(!user) { msg.innerText = "⚠ يرجى إدخال الاسم"; return; }
     if(!pass) { msg.innerText = "⚠ يرجى إدخال كلمة المرور"; return; }
-    
     processLogin(user, pass, false);
 }
 
 function processLogin(user, pass, isAuto) {
     const msg = document.getElementById('statusMsg');
-
     db.ref("users/" + user).once("value").then((snap) => {
         if(snap.exists()){
             const data = snap.val();
-            
             if(data.expirydate && new Date(data.expirydate) < new Date()) {
                 msg.innerText = "⚠ انتهى اشتراكك";
                 return;
             }
-
-            // ربط الجهاز تلقائياً إذا كان الحقل فارغاً
             if (!data.currentDevice || data.currentDevice === "") {
                 db.ref("users/" + user + "/currentDevice").set(deviceId);
             } else if (data.currentDevice !== deviceId) {
@@ -158,6 +151,10 @@ function processLogin(user, pass, isAuto) {
             if(data.password && data.password.toString() === pass) {
                 localStorage.setItem("user", user);
                 localStorage.setItem("pass", pass);
+                // حفظ الجلسة في ملفات الأندرويد لتخطي النافذة مستقبلاً
+                if(window.Android && window.Android.saveUserSession) {
+                    window.Android.saveUserSession(user, pass);
+                }
                 if(!isAuto) {
                     msg.style.color = "lime";
                     msg.innerText = "تم التحقق بنجاح..";
