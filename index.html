@@ -9,7 +9,6 @@
     <style>
         body { background-color: #000; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
         
-        /* شاشة التحميل - تظهر أول شيء وتغطي الواجهة البيضاء */
         #loader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; display: flex; flex-direction: column;
@@ -22,7 +21,6 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* الكارت يكون مخفي في البداية حتى ينتهي التحقق */
         .dragon-card { display: none; background: #111; padding: 30px; border-radius: 15px; border-top: 4px solid #ff0000; width: 320px; text-align: center; box-shadow: 0 0 20px rgba(255,0,0,0.3); }
         
         h1 { color: #ff0000; margin-bottom: 20px; text-shadow: 0 0 10px #ff0000; }
@@ -37,14 +35,13 @@
 </head>
 <body>
 
-<!-- شاشة التحميل والتحقق -->
 <div id="loader">
     <div class="spinner"></div>
     <p style="margin-top:15px; color:#fff; font-size:18px;">جاري التحقق...</p>
 </div>
 
 <div class="dragon-card" id="mainCard">
-    <h1>Dragon TV</h1>
+    <h1>DraGon TV</h1>
     <input type="text" id="userField" placeholder="الاسم الثنائي والمواليد">
     <input type="password" id="passField" placeholder="كلمة المرور">
     <div id="mainBtns" class="btns">
@@ -79,7 +76,6 @@ function generateRandomID() {
 }
 const deviceId = generateRandomID();
 
-// دالة لإخفاء اللودر وإظهار الكارت عند الحاجة
 function showUI() {
     document.getElementById('loader').style.display = "none";
     document.getElementById('mainCard').style.display = "block";
@@ -111,15 +107,18 @@ window.onload = function() {
     const savedUser = localStorage.getItem("user");
     const savedPass = localStorage.getItem("pass");
 
+    // نضع الاسم المسجل دائماً في الحقل إذا كان موجوداً
+    if(savedUser) {
+        document.getElementById('userField').value = savedUser;
+    }
+
     if (isLogoutMode && savedUser) {
         showUI();
-        document.getElementById('userField').value = savedUser;
         document.getElementById('userField').readOnly = true;
         document.getElementById('passField').style.display = "none";
         document.getElementById('mainBtns').style.display = "none";
         document.getElementById('outBtn').style.display = "block";
     } else if(savedUser && savedPass) {
-        // فحص تلقائي صامت
         processLogin(savedUser, savedPass, true);
     } else {
         showUI();
@@ -129,10 +128,14 @@ window.onload = function() {
 function register() {
     const user = document.getElementById('userField').value.trim();
     const msg = document.getElementById('statusMsg');
-    if(user.length < 8) { msg.innerText = "⚠ الاسم يجب أن يكون ثنائي"; return; }
+    
+    if(!user) { msg.style.color = "red"; msg.innerText = "⚠ يرجى إدخال الاسم أولاً"; return; }
+    if(user.length < 8) { msg.style.color = "red"; msg.innerText = "⚠ الاسم يجب أن يكون ثنائي"; return; }
+    
     db.ref("users/" + user).once("value").then((snap) => {
-        if(snap.exists()) { msg.innerText = "هذا المستخدم موجود بالفعل"; }
-        else {
+        if(snap.exists()) { 
+            msg.style.color = "red"; msg.innerText = "هذا المستخدم موجود بالفعل"; 
+        } else {
             db.ref("users/" + user).set({ username: user, currentDevice: deviceId, expirydate: "", password: "" }).then(() => {
                 msg.style.color = "yellow"; msg.innerText = "تم إرسال الطلب بنجاح";
             });
@@ -143,7 +146,12 @@ function register() {
 function login() {
     const user = document.getElementById('userField').value.trim();
     const pass = document.getElementById('passField').value.trim();
-    if(!user || !pass) { return; }
+    const msg = document.getElementById('statusMsg');
+
+    // التحقق من الحقول الفارغة عند الضغط على الزر
+    if(!user) { msg.style.color = "red"; msg.innerText = "⚠ يرجى إدخال اسم المستخدم"; return; }
+    if(!pass) { msg.style.color = "red"; msg.innerText = "⚠ يرجى إدخال كلمة المرور"; return; }
+    
     processLogin(user, pass, false);
 }
 
@@ -153,25 +161,26 @@ function processLogin(user, pass, isAuto) {
         if(snap.exists()){
             const data = snap.val();
             if(data.expirydate && new Date(data.expirydate) < new Date()) {
-                if(isAuto) showUI();
-                msg.innerText = "⚠ انتهى اشتراكك"; return;
+                showUI();
+                msg.style.color = "red"; msg.innerText = "⚠ انتهى اشتراكك"; return;
             }
             if (!data.currentDevice || data.currentDevice === "") {
                 db.ref("users/" + user + "/currentDevice").set(deviceId);
             } else if (data.currentDevice !== deviceId) {
-                if(isAuto) showUI();
+                showUI();
                 msg.style.color = "red"; msg.innerText = "⚠ حسابك مرتبط بجهاز آخر"; return;
             }
             if(data.password && data.password.toString() === pass) {
                 localStorage.setItem("user", user);
                 localStorage.setItem("pass", pass);
-                // إذا نجح التحقق التلقائي نغلق النافذة فوراً دون إظهار أي شيء
                 if(window.Android) { window.Android.closeWindow(); }
             } else {
-                showUI(); if(!isAuto) msg.innerText = "الباسورد خطأ";
+                showUI(); 
+                if(!isAuto) { msg.style.color = "red"; msg.innerText = "الباسورد خطأ"; }
             }
         } else {
-            showUI(); if(!isAuto) msg.innerText = "المستخدم غير موجود";
+            showUI(); 
+            if(!isAuto) { msg.style.color = "red"; msg.innerText = "المستخدم غير موجود"; }
         }
     }).catch(() => showUI());
 }
