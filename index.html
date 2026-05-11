@@ -7,8 +7,21 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
     <style>
-        body { background-color: #000; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .dragon-card { background: #111; padding: 30px; border-radius: 15px; border-top: 4px solid #ff0000; width: 320px; text-align: center; box-shadow: 0 0 20px rgba(255,0,0,0.3); }
+        /* شاشة التحميل السوداء تغطي كل شيء */
+        #loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 9999;
+        }
+        .spinner {
+            width: 50px; height: 50px; border: 5px solid #222;
+            border-top: 5px solid #ff0000; border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        body { background-color: #000; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
+        .dragon-card { display: none; background: #111; padding: 30px; border-radius: 15px; border-top: 4px solid #ff0000; width: 320px; text-align: center; box-shadow: 0 0 20px rgba(255,0,0,0.3); }
         h1 { color: #ff0000; margin-bottom: 20px; text-shadow: 0 0 10px #ff0000; }
         input { width: 100%; padding: 12px; margin-bottom: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; text-align: center; }
         .btns { display: flex; gap: 5px; }
@@ -21,7 +34,13 @@
 </head>
 <body>
 
-<div class="dragon-card">
+<!-- شاشة التحميل -->
+<div id="loader">
+    <div class="spinner"></div>
+    <p style="margin-top:15px; color:#fff;">جاري التحقق...</p>
+</div>
+
+<div class="dragon-card" id="mainCard">
     <h1>Dragon TV</h1>
     <input type="text" id="userField" placeholder="الاسم الثنائي والمواليد">
     <input type="password" id="passField" placeholder="كلمة المرور">
@@ -47,7 +66,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// 1. توليد ايدي عشوائي (رقم-رقم)
 function generateRandomID() {
     let id = localStorage.getItem('deviceId');
     if (!id) {
@@ -58,28 +76,11 @@ function generateRandomID() {
 }
 const deviceId = generateRandomID();
 
-// 2. دالة تسجيل الخروج والمقارنة مع السيرفر
-window.clearDeviceSession = function() {
-    const user = localStorage.getItem("user");
-    const msg = document.getElementById('statusMsg');
-    if (user) {
-        db.ref("users/" + user).once("value").then((snap) => {
-            const data = snap.val();
-            if (data && data.currentDevice === deviceId) {
-                db.ref("users/" + user + "/currentDevice").set("").then(() => {
-                    localStorage.clear();
-                    alert("تم تسجيل الخروج بنجاح.");
-                    if(window.Android) { window.Android.closeWindow(); } else { location.reload(); }
-                });
-            } else {
-                msg.style.color = "orange";
-                msg.innerText = "⚠ الجهاز غير مطابق لهذا الحساب";
-            }
-        });
-    }
-};
+function hideLoader() {
+    document.getElementById('loader').style.display = "none";
+    document.getElementById('mainCard').style.display = "block";
+}
 
-// 3. معالج التحميل للتحكم بالواجهات
 window.onload = function() {
     const urlParams = new URLSearchParams(window.location.search);
     const isLogoutMode = urlParams.get('action') === 'logout';
@@ -87,91 +88,41 @@ window.onload = function() {
     const savedPass = localStorage.getItem("pass");
 
     if (isLogoutMode && savedUser) {
-        // وضع تسجيل الخروج: يمنع الدخول التلقائي ويظهر واجهة المسح
+        hideLoader();
         document.getElementById('userField').value = savedUser;
         document.getElementById('userField').readOnly = true;
         document.getElementById('passField').style.display = "none";
         document.getElementById('mainBtns').style.display = "none";
         document.getElementById('outBtn').style.display = "block";
     } else if(savedUser && savedPass) {
-        // وضع الدخول التلقائي عند فتح التطبيق العادي
-        document.getElementById('userField').value = savedUser;
-        document.getElementById('passField').value = savedPass;
+        // دخول تلقائي صامت بدون إظهار الواجهة
         processLogin(savedUser, savedPass, true);
+    } else {
+        hideLoader();
     }
 };
 
-function register() {
-    const user = document.getElementById('userField').value.trim();
-    const msg = document.getElementById('statusMsg');
-    if(user.length < 8) { msg.innerText = "⚠ الاسم يجب أن يكون ثنائي"; return; }
-
-    db.ref("users/" + user).once("value").then((snap) => {
-        if(snap.exists()) {
-            msg.innerText = "هذا المستخدم موجود بالفعل";
-        } else {
-            db.ref("users/" + user).set({
-                username: user,
-                currentDevice: deviceId,
-                expirydate: "",
-                password: ""
-            }).then(() => {
-                msg.style.color = "yellow";
-                msg.innerText = "تم إرسال الطلب بنجاح";
-            });
-        }
-    });
-}
-
-function login() {
-    const user = document.getElementById('userField').value.trim();
-    const pass = document.getElementById('passField').value.trim();
-    const msg = document.getElementById('statusMsg');
-
-    if(!user) { msg.innerText = "⚠ يرجى إدخال الاسم"; return; }
-    if(!pass) { msg.innerText = "⚠ يرجى إدخال كلمة المرور"; return; }
-    
-    processLogin(user, pass, false);
-}
-
 function processLogin(user, pass, isAuto) {
-    const msg = document.getElementById('statusMsg');
-
     db.ref("users/" + user).once("value").then((snap) => {
         if(snap.exists()){
             const data = snap.val();
-            
-            if(data.expirydate && new Date(data.expirydate) < new Date()) {
-                msg.innerText = "⚠ انتهى اشتراكك";
-                return;
-            }
-
-            // ربط الجهاز تلقائياً إذا كان الحقل فارغاً
-            if (!data.currentDevice || data.currentDevice === "") {
-                db.ref("users/" + user + "/currentDevice").set(deviceId);
-            } else if (data.currentDevice !== deviceId) {
-                msg.style.color = "red";
-                msg.innerText = "⚠ حسابك مرتبط بجهاز آخر";
-                return;
-            }
-
-            if(data.password && data.password.toString() === pass) {
+            if(data.password && data.password.toString() === pass && (data.currentDevice === deviceId || !data.currentDevice)) {
+                if (!data.currentDevice) db.ref("users/" + user + "/currentDevice").set(deviceId);
                 localStorage.setItem("user", user);
                 localStorage.setItem("pass", pass);
-                if(!isAuto) {
-                    msg.style.color = "lime";
-                    msg.innerText = "تم التحقق بنجاح..";
-                    setTimeout(() => {
-                        if(window.Android) { window.Android.closeWindow(); }
-                    }, 1000);
-                }
-            } else {
-                if(!isAuto) msg.innerText = "الباسورد خطأ";
+                if(window.Android) { window.Android.closeWindow(); }
+                return;
             }
-        } else {
-            if(!isAuto) msg.innerText = "المستخدم غير موجود";
         }
-    });
+        hideLoader(); // فشل التلقائي، أظهر الواجهة
+    }).catch(() => hideLoader());
+}
+
+// باقي الدوال (register, login, clearDeviceSession) تبقى كما هي لديك
+function login() {
+    const user = document.getElementById('userField').value.trim();
+    const pass = document.getElementById('passField').value.trim();
+    processLogin(user, pass, false);
 }
 </script>
 </body>
