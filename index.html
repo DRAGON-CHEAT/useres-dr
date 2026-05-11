@@ -90,12 +90,6 @@ window.clearDeviceSession = function() {
             if (data && data.currentDevice === deviceId) {
                 db.ref("users/" + user + "/currentDevice").set("").then(() => {
                     localStorage.clear();
-                    
-                    // إبلاغ الأندرويد بمسح الجلسة أيضاً لمنع الفتح التلقائي
-                    if(window.Android && window.Android.saveUserData) {
-                        window.Android.saveUserData(""); 
-                    }
-
                     alert("تم تسجيل الخروج بنجاح.");
                     if(window.Android) { window.Android.closeWindow(); } else { location.reload(); }
                 });
@@ -113,6 +107,7 @@ window.onload = function() {
     const savedUser = localStorage.getItem("user");
     const savedPass = localStorage.getItem("pass");
 
+    // نضع الاسم المسجل دائماً في الحقل إذا كان موجوداً
     if(savedUser) {
         document.getElementById('userField').value = savedUser;
     }
@@ -153,6 +148,7 @@ function login() {
     const pass = document.getElementById('passField').value.trim();
     const msg = document.getElementById('statusMsg');
 
+    // التحقق من الحقول الفارغة عند الضغط على الزر
     if(!user) { msg.style.color = "red"; msg.innerText = "⚠ يرجى إدخال اسم المستخدم"; return; }
     if(!pass) { msg.style.color = "red"; msg.innerText = "⚠ يرجى إدخال كلمة المرور"; return; }
     
@@ -177,16 +173,6 @@ function processLogin(user, pass, isAuto) {
             if(data.password && data.password.toString() === pass) {
                 localStorage.setItem("user", user);
                 localStorage.setItem("pass", pass);
-                
-                // --- الجزء الأهم لكسر الحلقة التكرارية (Loop) ---
-                // داخل HTML عند نجاح الباسورد
-if(window.Android && window.Android.saveUserData) {
-    window.Android.saveUserData(user); // هذا السطر هو اللي يخلي onResume تعرف انك سجلت وتفتح لك التطبيق
-}
-window.Android.closeWindow();
-
-                }
-
                 if(window.Android) { window.Android.closeWindow(); }
             } else {
                 showUI(); 
