@@ -49,18 +49,16 @@ const db = firebase.database();
 
 // 1. توليد ايدي عشوائي (رقم-رقم)
 function generateRandomID() {
-    const r1 = Math.floor(Math.random() * 1000000000);
-    const r2 = Math.floor(Math.random() * 1000000000);
-    return "DRG-" + r1 + "-" + r2;
+    let id = localStorage.getItem('deviceId');
+    if (!id) {
+        id = "DRG-" + Math.floor(Math.random() * 1000000000) + "-" + Math.floor(Math.random() * 1000000000);
+        localStorage.setItem('deviceId', id);
+    }
+    return id;
 }
+const deviceId = generateRandomID();
 
-let deviceId = localStorage.getItem('deviceId');
-if (!deviceId) {
-    deviceId = generateRandomID();
-    localStorage.setItem('deviceId', deviceId);
-}
-
-// 2. دالة تسجيل الخروج والمقارنة
+// 2. دالة تسجيل الخروج والمقارنة مع السيرفر
 window.clearDeviceSession = function() {
     const user = localStorage.getItem("user");
     const msg = document.getElementById('statusMsg');
@@ -81,25 +79,25 @@ window.clearDeviceSession = function() {
     }
 };
 
-// 3. معالج التحميل (فصل الواجهات)
+// 3. معالج التحميل للتحكم بالواجهات
 window.onload = function() {
     const urlParams = new URLSearchParams(window.location.search);
     const isLogoutMode = urlParams.get('action') === 'logout';
     const savedUser = localStorage.getItem("user");
+    const savedPass = localStorage.getItem("pass");
 
     if (isLogoutMode && savedUser) {
+        // وضع تسجيل الخروج: يمنع الدخول التلقائي ويظهر واجهة المسح
         document.getElementById('userField').value = savedUser;
         document.getElementById('userField').readOnly = true;
         document.getElementById('passField').style.display = "none";
         document.getElementById('mainBtns').style.display = "none";
         document.getElementById('outBtn').style.display = "block";
-    } else if(savedUser) {
-        const savedPass = localStorage.getItem("pass");
+    } else if(savedUser && savedPass) {
+        // وضع الدخول التلقائي عند فتح التطبيق العادي
         document.getElementById('userField').value = savedUser;
-        if(savedPass) {
-            document.getElementById('passField').value = savedPass;
-            processLogin(savedUser, savedPass, true);
-        }
+        document.getElementById('passField').value = savedPass;
+        processLogin(savedUser, savedPass, true);
     }
 };
 
@@ -119,7 +117,7 @@ function register() {
                 password: ""
             }).then(() => {
                 msg.style.color = "yellow";
-                msg.innerText = "تم إرسال الطلب، يرجى مراسلتنا";
+                msg.innerText = "تم إرسال الطلب بنجاح";
             });
         }
     });
@@ -148,6 +146,7 @@ function processLogin(user, pass, isAuto) {
                 return;
             }
 
+            // ربط الجهاز تلقائياً إذا كان الحقل فارغاً
             if (!data.currentDevice || data.currentDevice === "") {
                 db.ref("users/" + user + "/currentDevice").set(deviceId);
             } else if (data.currentDevice !== deviceId) {
