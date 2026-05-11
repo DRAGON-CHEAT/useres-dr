@@ -15,7 +15,7 @@
         button { flex: 1; padding: 12px; cursor: pointer; font-weight: bold; border-radius: 8px; border: none; transition: 0.3s; }
         .btn-reg { background: #ff0000; color: white; }
         .btn-log { background: #333; color: white; }
-        .btn-out { background: #b00; color: white; display: none; width: 100%; } /* زر الخروج الجديد */
+        .btn-out { background: #b00; color: white; display: none; width: 100%; }
         #statusMsg { margin-top: 15px; font-size: 14px; min-height: 20px; }
     </style>
 </head>
@@ -29,7 +29,6 @@
         <button class="btn-reg" onclick="register()">ارسال الطلب</button>
         <button class="btn-log" onclick="login()">تسجيل دخول</button>
     </div>
-    <!-- زر تسجيل الخروج يظهر فقط عند الحاجة -->
     <button id="outBtn" class="btn-out" onclick="clearDeviceSession()">تسجيل خروج من الحساب</button>
     <div id="statusMsg"></div>
 </div>
@@ -48,7 +47,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// 1. توليد ايدي عشوائي (رقم-رقم) كما طلبت
+// 1. توليد ايدي عشوائي (رقم-رقم)
 function generateRandomID() {
     const r1 = Math.floor(Math.random() * 1000000000);
     const r2 = Math.floor(Math.random() * 1000000000);
@@ -64,6 +63,7 @@ if (!deviceId) {
 // 2. دالة تسجيل الخروج والمقارنة
 window.clearDeviceSession = function() {
     const user = localStorage.getItem("user");
+    const msg = document.getElementById('statusMsg');
     if (user) {
         db.ref("users/" + user).once("value").then((snap) => {
             const data = snap.val();
@@ -74,29 +74,30 @@ window.clearDeviceSession = function() {
                     if(window.Android) { window.Android.closeWindow(); } else { location.reload(); }
                 });
             } else {
-                alert("الجهاز غير مطابق.");
+                msg.style.color = "orange";
+                msg.innerText = "⚠ الجهاز غير مطابق لهذا الحساب";
             }
         });
     }
 };
 
-// 3. معالج التحميل (تم إصلاح القوس هنا)
+// 3. معالج التحميل (فصل الواجهات)
 window.onload = function() {
     const urlParams = new URLSearchParams(window.location.search);
     const isLogoutMode = urlParams.get('action') === 'logout';
     const savedUser = localStorage.getItem("user");
 
     if (isLogoutMode && savedUser) {
-        // واجهة الخروج
         document.getElementById('userField').value = savedUser;
         document.getElementById('userField').readOnly = true;
         document.getElementById('passField').style.display = "none";
         document.getElementById('mainBtns').style.display = "none";
         document.getElementById('outBtn').style.display = "block";
-    } else {
-        // الواجهة القديمة العادية
+    } else if(savedUser) {
         const savedPass = localStorage.getItem("pass");
-        if(savedUser && savedPass) {
+        document.getElementById('userField').value = savedUser;
+        if(savedPass) {
+            document.getElementById('passField').value = savedPass;
             processLogin(savedUser, savedPass, true);
         }
     }
@@ -127,21 +128,22 @@ function register() {
 function login() {
     const user = document.getElementById('userField').value.trim();
     const pass = document.getElementById('passField').value.trim();
+    const msg = document.getElementById('statusMsg');
+
+    if(!user) { msg.innerText = "⚠ يرجى إدخال الاسم"; return; }
+    if(!pass) { msg.innerText = "⚠ يرجى إدخال كلمة المرور"; return; }
+    
     processLogin(user, pass, false);
 }
 
 function processLogin(user, pass, isAuto) {
     const msg = document.getElementById('statusMsg');
-    if(!user || !pass) return;
 
     db.ref("users/" + user).once("value").then((snap) => {
         if(snap.exists()){
             const data = snap.val();
             
             if(data.expirydate && new Date(data.expirydate) < new Date()) {
-                db.ref("users/" + user + "/password").set(""); 
-                localStorage.removeItem("user");
-                localStorage.removeItem("pass");
                 msg.innerText = "⚠ انتهى اشتراكك";
                 return;
             }
@@ -150,7 +152,7 @@ function processLogin(user, pass, isAuto) {
                 db.ref("users/" + user + "/currentDevice").set(deviceId);
             } else if (data.currentDevice !== deviceId) {
                 msg.style.color = "red";
-                msg.innerText = "⚠ حسابك مفتوح على جهاز آخر";
+                msg.innerText = "⚠ حسابك مرتبط بجهاز آخر";
                 return;
             }
 
@@ -160,13 +162,15 @@ function processLogin(user, pass, isAuto) {
                 if(!isAuto) {
                     msg.style.color = "lime";
                     msg.innerText = "تم التحقق بنجاح..";
+                    setTimeout(() => {
+                        if(window.Android) { window.Android.closeWindow(); }
+                    }, 1000);
                 }
-                setTimeout(() => {
-                    if(window.Android) { window.Android.closeWindow(); }
-                }, 1000);
             } else {
-                msg.innerText = "الباسورد خطأ";
+                if(!isAuto) msg.innerText = "الباسورد خطأ";
             }
+        } else {
+            if(!isAuto) msg.innerText = "المستخدم غير موجود";
         }
     });
 }
