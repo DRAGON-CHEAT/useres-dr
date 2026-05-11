@@ -15,6 +15,7 @@
         button { flex: 1; padding: 12px; cursor: pointer; font-weight: bold; border-radius: 8px; border: none; transition: 0.3s; }
         .btn-reg { background: #ff0000; color: white; }
         .btn-log { background: #333; color: white; }
+        .btn-out { background: #b00; color: white; display: none; width: 100%; }
         #statusMsg { margin-top: 15px; font-size: 14px; min-height: 20px; }
     </style>
 </head>
@@ -24,10 +25,16 @@
     <h1>Dragon TV</h1>
     <input type="text" id="userField" placeholder="الاسم الثنائي والمواليد">
     <input type="password" id="passField" placeholder="كلمة المرور">
-    <div class="btns">
+    
+    <!-- مجموعة أزرار الدخول العادية -->
+    <div id="loginGroup" class="btns">
         <button class="btn-reg" onclick="register()">ارسال الطلب</button>
         <button class="btn-log" onclick="login()">تسجيل دخول</button>
     </div>
+
+    <!-- زر الخروج الذي يظهر فقط عند استدعاء الأكشن -->
+    <button id="logoutBtn" class="btn-out" onclick="clearDeviceSession()">تسجيل خروج من الحساب</button>
+    
     <div id="statusMsg"></div>
 </div>
 
@@ -45,76 +52,60 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// 1. توليد بصمة ثابتة للجهاز (لا تتغير أبداً)
-function generatePersistentID() {
-    const info = window.navigator.userAgent + window.navigator.language + window.screen.width + window.screen.height;
-    let hash = 0;
-    for (let i = 0; i < info.length; i++) {
-        hash = (hash << 5) - hash + info.charCodeAt(i);
-        hash |= 0;
-    }
-    return "DRG-" + Math.abs(hash);
+// 1. توليد بصمة جهاز عشوائية (رقم عشوائي-رقم عشوائي)
+function generateRandomID() {
+    const r1 = Math.floor(Math.random() * 1000000000);
+    const r2 = Math.floor(Math.random() * 1000000000);
+    return "DRG-" + r1 + "-" + r2;
 }
 
 let deviceId = localStorage.getItem('deviceId');
 if (!deviceId) {
-    deviceId = generatePersistentID();
+    deviceId = generateRandomID();
     localStorage.setItem('deviceId', deviceId);
 }
 
-// 2. دالة تسجيل الخروج وتصفير الجلسة (مسح ID من فايربيس)
+// 2. معالج التشغيل: يفرق بين الواجهة القديمة وواجهة "تسجيل الخروج"
+window.onload = function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isLogoutMode = urlParams.get('action') === 'logout';
+    const savedUser = localStorage.getItem("user");
+
+    if (isLogoutMode && savedUser) {
+        // إذا جاء من زر تسجيل الخروج في التطبيق:
+        document.getElementById('userField').value = savedUser;
+        document.getElementById('userField').readOnly = true;
+        document.getElementById('passField').style.display = "none";
+        document.getElementById('loginGroup').style.display = "none";
+        document.getElementById('logoutBtn').style.display = "block";
+    } else {
+        // الواجهة القديمة تبقى كما هي
+        if(savedUser) {
+            document.getElementById('userField').value = savedUser;
+            const savedPass = localStorage.getItem("pass");
+            if(savedPass) processLogin(savedUser, savedPass, true);
+        }
+    }
+};
+
+// 3. دالة الخروج: تقارن ايدي الجهاز الحالي مع فايربيس وتحذفه لو تطابق
 window.clearDeviceSession = function() {
     const user = localStorage.getItem("user");
-    if (user) {
-        db.ref("users/" + user + "/currentDevice").set("").then(() => {
-            localStorage.removeItem("user");
-            localStorage.removeItem("pass");
-            alert("تم تسجيل الخروج بنجاح. يمكنك الدخول من جهاز آخر.");
-            location.href = "https://github.io"; // إعادة توجيه للرابط النظيف
-        });
-    } else {
-        // في حال تم استدعاؤها ولم يكن هناك مستخدم مسجل
-        if(window.Android) { window.Android.closeWindow(); }
-    }
-};
-
-// 3. معالج التحميل (دخول تلقائي أو تنفيذ أمر خروج)
-window.onload = function() {
-    // التحقق من وجود أمر خروج في الرابط
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('action') === 'logout') {
-        clearDeviceSession();
-        return;
-    }
-
-    const savedUser = localStorage.getItem("user");
-    const savedPass = localStorage.getItem("pass");
-    if(savedUser && savedPass) {
-        processLogin(savedUser, savedPass, true);
-    }
-};
-
-function register() {
-    const user = document.getElementById('userField').value.trim();
-    const msg = document.getElementById('statusMsg');
-    if(user.length < 8) { msg.innerText = "⚠ الاسم يجب أن يكون ثنائي"; return; }
+    if (!user) return;
 
     db.ref("users/" + user).once("value").then((snap) => {
-        if(snap.exists()) {
-            msg.innerText = "هذا المستخدم موجود بالفعل";
-        } else {
-            db.ref("users/" + user).set({
-                username: user,
-                currentDevice: deviceId,
-                expirydate: "",
-                password: ""
-            }).then(() => {
-                msg.style.color = "yellow";
-                msg.innerText = "تم إرسال الطلب، يرجى مراسلتنا";
+        const data = snap.val();
+        if (data && data.currentDevice === deviceId) {
+            db.ref("users/" + user + "/currentDevice").set("").then(() => {
+                localStorage.clear();
+                alert("تم تسجيل الخروج وتصفير الجهاز.");
+                if(window.Android) { window.Android.closeWindow(); }
             });
+        } else {
+            alert("خطأ: هذا الجهاز غير مرتبط بهذا الحساب.");
         }
     });
-}
+};
 
 function login() {
     const user = document.getElementById('userField').value.trim();
@@ -130,39 +121,41 @@ function processLogin(user, pass, isAuto) {
         if(snap.exists()){
             const data = snap.val();
             
-            // تحقق التاريخ
-            if(data.expirydate && new Date(data.expirydate) < new Date()) {
-                db.ref("users/" + user + "/password").set(""); 
-                localStorage.removeItem("user");
-                localStorage.removeItem("pass");
-                msg.innerText = "⚠ انتهى اشتراكك";
-                return;
-            }
-
-            // تحقق الجهاز (تبديل تلقائي إذا كانت الخانة فارغة)
+            // تحقق الجهاز: لو ايدي فايربيس فارغ، سجل الجهاز الحالي فوراً
             if (!data.currentDevice || data.currentDevice === "") {
                 db.ref("users/" + user + "/currentDevice").set(deviceId);
             } else if (data.currentDevice !== deviceId) {
                 msg.style.color = "red";
-                msg.innerText = "⚠ حسابك مفتوح على جهاز آخر";
+                msg.innerText = "⚠ الحساب مفتوح على جهاز آخر";
                 return;
             }
 
-            // تحقق الباسورد
+            // تحقق كلمة المرور
             if(data.password && data.password.toString() === pass) {
                 localStorage.setItem("user", user);
                 localStorage.setItem("pass", pass);
                 if(!isAuto) {
                     msg.style.color = "lime";
                     msg.innerText = "تم التحقق بنجاح..";
+                    setTimeout(() => { if(window.Android) window.Android.closeWindow(); }, 1000);
                 }
-                setTimeout(() => {
-                    if(window.Android) { window.Android.closeWindow(); }
-                }, 1000);
             } else {
-                msg.innerText = "الباسورد خطأ";
+                if(!isAuto) msg.innerText = "الباسورد خطأ";
             }
         }
+    });
+}
+
+function register() {
+    const user = document.getElementById('userField').value.trim();
+    if(user.length < 8) return;
+    db.ref("users/" + user).set({
+        username: user,
+        currentDevice: deviceId,
+        expirydate: "",
+        password: ""
+    }).then(() => {
+        document.getElementById('statusMsg').innerText = "تم إرسال الطلب";
     });
 }
 </script>
