@@ -21,59 +21,28 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(3600deg); } }
 
-        /* تعديل العرض ليصبح مستطيلاً بناءً على طلبك مع الحفاظ على التصميم واللون والتوهج الأحمر المحيط بنسبة 100% */
+        /* تعديل تصميم الكارد ليكون أعرض، متناسق ومستطيل ومناسب للتلفاز والموبايل */
         .dragon-card { 
             display: none; 
             background: #111; 
-            padding: 30px; 
+            padding: 40px 50px; 
             border-radius: 15px; 
             border-top: 4px solid #ff0000; 
-            width: 90%;
-            max-width: 580px; /* زيادة العرض للشاشات والتلفاز */
+            width: 85%;
+            max-width: 550px; 
             text-align: center; 
             box-shadow: 0 0 20px rgba(255,0,0,0.3); 
-            position: relative; /* مهم لتموضع الأيقونات في الزاوية اليسرى العليا */
             box-sizing: border-box;
         }
         
-        /* حاوية أيقونات التواصل المضافة في الزاوية اليسرى العليا */
-        .contact-container {
-            position: absolute;
-            top: 15px;
-            left: 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            z-index: 10;
-        }
-        .contact-link {
-            color: #fff;
-            text-decoration: none;
-            font-size: 20px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            outline: none;
-            transition: 0.2s;
-        }
-        .phone-display {
-            font-size: 13px;
-            color: #aaa;
-            direction: ltr;
-            font-weight: bold;
-        }
-        
-        h1 { color: #ff0000; margin-bottom: 20px; text-shadow: 0 0 10px #ff0000; margin-top: 15px; }
-        input { width: 100%; padding: 12px; margin-bottom: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; text-align: center; outline: none; }
-        .btns { display: flex; gap: 5px; margin-bottom: 10px; }
-        button { flex: 1; padding: 12px; cursor: pointer; font-weight: bold; border-radius: 8px; border: none; transition: 0.3s; outline: none; }
+        h1 { color: #ff0000; margin-bottom: 25px; text-shadow: 0 0 10px #ff0000; font-size: 2rem; }
+        input { width: 100%; padding: 14px; margin-bottom: 15px; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; text-align: center; outline: none; font-size: 16px; }
+        .btns { display: flex; gap: 12px; margin-bottom: 15px; }
+        button { flex: 1; padding: 14px; cursor: pointer; font-weight: bold; border-radius: 8px; border: none; transition: 0.3s; outline: none; font-size: 16px; }
         .btn-reg { background: #353570; color: white; }
         .btn-log { background: #3a7035; color: white; }
-        .btn-out { background: #b00; color: white; display: none; width: 100%; outline: none; }
-        #statusMsg { margin-top: 15px; font-size: 14px; min-height: 20px; }
+        .btn-out { background: #b00; color: white; display: none; width: 100%; outline: none; padding: 14px; font-size: 16px; }
+        #statusMsg { margin-top: 15px; font-size: 15px; min-height: 20px; }
 
         /* ستايل التركيز الخاص بريموت التلفاز */
         .tv-focusable:focus {
@@ -82,20 +51,17 @@
             transform: scale(1.03);
         }
 
-        /* تلوين الأيقونات عند الفوكس */
-        .contact-link.whatsapp-icon:focus { color: #25D366 !important; }
-        .contact-link.telegram-icon:focus { color: #0088cc !important; }
-
-        /* المواءمة والتنسيق مع الهواتف الذكية */
+        /* تحسينات إضافية مرنة متجاوبة مع الشاشات الصغيرة للموبايل */
         @media (max-width: 480px) {
-            .dragon-card { padding: 20px; padding-top: 55px; }
-            .contact-container { top: 12px; left: 12px; gap: 8px; }
-            .contact-link { font-size: 18px; width: 30px; height: 30px; }
-            .phone-display { font-size: 11px; }
+            .dragon-card {
+                padding: 30px 20px;
+                width: 90%;
+            }
+            h1 { font-size: 1.6rem; margin-bottom: 20px; }
+            .btns { gap: 8px; }
+            input, button, .btn-out { padding: 12px; font-size: 14px; }
         }
     </style>
-    <!-- مكتبة الأيقونات لعرض شعارات التواصل دون التداخل مع أي سكربت آخر -->
-    <link rel="stylesheet" href="cloudflare.com">
 </head>
 <body>
 
@@ -105,17 +71,6 @@
 </div>
 
 <div class="dragon-card" id="mainCard">
-    <!-- حاوية أيقونات التواصل المضافة حديثاً في الزاوية اليسرى -->
-    <div class="contact-container">
-        <span class="phone-display">+9647XXXXXXXX</span>
-        <a href="wa.me" class="contact-link whatsapp-icon tv-focusable" target="_blank" id="waBtn">
-            <i class="fab fa-whatsapp"></i>
-        </a>
-        <a href="t.me" class="contact-link telegram-icon tv-focusable" target="_blank" id="tgBtn">
-            <i class="fab fa-telegram"></i>
-        </a>
-    </div>
-
     <h1>DraGon TV</h1>
     <!-- إضافة كلاس tv-focusable لجميع العناصر القابلة للتفاعل -->
     <input type="text" id="userField" class="tv-focusable" placeholder="الاسم الثنائي والمواليد">
@@ -281,11 +236,9 @@ document.addEventListener('keydown', function(e) {
     switch(e.keyCode) {
         case 38: // سهم فوق
             if (currentIndex > 0) {
-                // التعامل مع الأزرار المتجاورة أفقياً وعناصر التواصل الجديدة
+                // التعامل مع الأزرار المتجاورة أفقياً
                 if(focusableElements[currentIndex].id === "logBtn" && focusableElements[currentIndex - 1].id === "regBtn"){
                      currentIndex = currentIndex - 2; // تخطي الزر المجاور والذهاب للحقل الأعلى
-                } else if(focusableElements[currentIndex].id === "tgBtn" || focusableElements[currentIndex].id === "waBtn") {
-                     return; // منع الفوكس من الخروج للأعلى خارج الصندوق عند الأيقونات
                 } else {
                      currentIndex--;
                 }
@@ -307,47 +260,34 @@ document.addEventListener('keydown', function(e) {
             e.preventDefault();
             break;
 
-        case 37: // سهم يسار (لالتفاف التنقل للأزرار والأيقونات المتجاورة)
+        case 37: // سهم يسار (للتنقل بين الأزرار المتجاورة)
             if(focusableElements[currentIndex].id === "regBtn" && document.getElementById('logBtn').style.display !== 'none') {
                 currentIndex = focusableElements.indexOf(document.getElementById('logBtn'));
-                focusableElements[currentIndex].focus();
-            } else if(focusableElements[currentIndex].id === "waBtn" && document.getElementById('tgBtn').style.display !== 'none') {
-                // إصلاح مشكلة الاتجاه المعكوس: السهم اليسار يتنقل من الواتساب (يمين) إلى التليجرام (يسار)
-                currentIndex = focusableElements.indexOf(document.getElementById('tgBtn'));
                 focusableElements[currentIndex].focus();
             }
             e.preventDefault();
             break;
 
-        case 39: // سهم يمين (للتنقل بين الأزرار والأيقونات المتجاورة)
+        case 39: // سهم يمين (للتنقل بين الأزرار المتجاورة)
             if(focusableElements[currentIndex].id === "logBtn") {
                 currentIndex = focusableElements.indexOf(document.getElementById('regBtn'));
-                focusableElements[currentIndex].focus();
-            } else if(focusableElements[currentIndex].id === "tgBtn") {
-                // إصلاح مشكلة الاتجاه المعكوس: السهم اليمين يتنقل من التليجرام (يسار) إلى الواتساب (يمين)
-                currentIndex = focusableElements.indexOf(document.getElementById('waBtn'));
                 focusableElements[currentIndex].focus();
             }
             e.preventDefault();
             break;
 
         case 13: // زر OK / Enter
-            // يفتح كيبورد التلفاز أو الهاتف بشكل أصلي تماماً عند الوقوف والضغط على حقول الإدخال
-            if (document.activeElement.tagName === 'INPUT') {
-                document.activeElement.focus();
-            } else {
+            // إذا كان حقل إدخال نتركه يفتح الكيبورد الافتراضي للتلفاز، وإذا كان زر يقوم بالضغط عليه
+            if (document.activeElement.tagName !== 'INPUT') {
                 document.activeElement.click();
                 e.preventDefault();
             }
             break;
 
-        case 4:   // زر الرجوع لشاشات التلفاز الذكية
+        case 4:   // زر الرجوع في بعض شاشات التلفاز الذكية
         case 27:  // زر Escape من الكيبورد
-            if (document.activeElement.tagName === 'INPUT') {
-                document.activeElement.blur(); // الخروج من حقل الإدخال وإخفاء الكيبورد بشكل طبيعي
-                e.preventDefault();
-            } else if(window.Android) {
-                window.Android.closeWindow(); // الخروج عبر كلاس الأندرويد الأصلي الخاص بك
+            if(window.Android) {
+                window.Android.closeWindow(); // الخروج عبر كلاس الأندرويد
                 e.preventDefault();
             }
             break;
