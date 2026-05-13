@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Dragon TV Services</title>
-    <script src="gstatic.com"></script>
-    <script src="gstatic.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
     <style>
         body { background-color: #000; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
-        
+
         #loader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; display: flex; flex-direction: column;
@@ -19,47 +19,74 @@
             border-top: 5px solid #ff0000; border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(3600deg); } }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* تعديل تصميم الكارد ليكون أعرض، متناسق ومستطيل ومناسب للتلفاز والموبايل */
+        /* تحديث حجم الكارد ليكون أكبر وتناسبي للشاشات المختلفة */
         .dragon-card { 
             display: none; 
             background: #111; 
-            padding: 40px 50px; 
+            padding: 40px; 
             border-radius: 15px; 
             border-top: 4px solid #ff0000; 
-            width: 85%;
-            max-width: 550px; 
+            width: 90%; 
+            max-width: 450px; 
             text-align: center; 
-            box-shadow: 0 0 20px rgba(255,0,0,0.3); 
-            box-sizing: border-box;
+            box-shadow: 0 0 25px rgba(255,0,0,0.3); 
         }
         
-        h1 { color: #ff0000; margin-bottom: 25px; text-shadow: 0 0 10px #ff0000; font-size: 2rem; }
-        input { width: 100%; padding: 14px; margin-bottom: 15px; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; text-align: center; outline: none; font-size: 16px; }
-        .btns { display: flex; gap: 12px; margin-bottom: 15px; }
-        button { flex: 1; padding: 14px; cursor: pointer; font-weight: bold; border-radius: 8px; border: none; transition: 0.3s; outline: none; font-size: 16px; }
+        h1 { color: #ff0000; margin-bottom: 25px; text-shadow: 0 0 10px #ff0000; font-size: 2em; }
+
+        input { 
+            width: 100%; 
+            padding: 16px; 
+            margin-bottom: 12px; 
+            background: #222; 
+            border: 1px solid #444; 
+            color: white; 
+            border-radius: 10px; 
+            box-sizing: border-box; 
+            text-align: center; 
+            outline: none; 
+            font-size: 1.1em;
+        }
+
+        .btns { display: flex; gap: 10px; margin-bottom: 12px; }
+        button { flex: 1; padding: 16px; cursor: pointer; font-weight: bold; border-radius: 10px; border: none; transition: 0.3s; outline: none; font-size: 1.1em; }
+
         .btn-reg { background: #353570; color: white; }
         .btn-log { background: #3a7035; color: white; }
-        .btn-out { background: #b00; color: white; display: none; width: 100%; outline: none; padding: 14px; font-size: 16px; }
-        #statusMsg { margin-top: 15px; font-size: 15px; min-height: 20px; }
+        .btn-out { background: #b00; color: white; display: none; width: 100%; outline: none; }
+
+        #statusMsg { margin-top: 20px; font-size: 15px; min-height: 20px; }
+
+        .contact-icons {
+            display: flex; justify-content: center; gap: 15px; margin-top: 15px;
+        }
+        .contact-icons a {
+            display: flex; align-items: center; justify-content: center;
+            width: 45px; height: 45px; border-radius: 50%;
+            background: #222; color: white; text-decoration: none;
+            font-size: 1.5em; transition: 0.3s;
+        }
+        .contact-icons a:hover { transform: scale(1.1); }
+
+        .contact-info {
+            display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px; font-size: 1.1em;
+        }
 
         /* ستايل التركيز الخاص بريموت التلفاز */
         .tv-focusable:focus {
             border: 2px solid #ff0000 !important;
-            box-shadow: 0 0 15px #ff0000 !important;
+            box-shadow: 0 0 18px #ff0000 !important;
             transform: scale(1.03);
         }
 
-        /* تحسينات إضافية مرنة متجاوبة مع الشاشات الصغيرة للموبايل */
-        @media (max-width: 480px) {
-            .dragon-card {
-                padding: 30px 20px;
-                width: 90%;
-            }
-            h1 { font-size: 1.6rem; margin-bottom: 20px; }
-            .btns { gap: 8px; }
-            input, button, .btn-out { padding: 12px; font-size: 14px; }
+        /* responsive adjustments */
+        @media(max-width:600px) {
+            .dragon-card { padding: 30px; width: 95%; }
+            input, button { font-size: 1em; padding: 14px; }
+            .contact-icons a { width: 40px; height: 40px; font-size: 1.3em; }
+            .contact-info { font-size: 1em; }
         }
     </style>
 </head>
@@ -72,22 +99,34 @@
 
 <div class="dragon-card" id="mainCard">
     <h1>DraGon TV</h1>
-    <!-- إضافة كلاس tv-focusable لجميع العناصر القابلة للتفاعل -->
+    
     <input type="text" id="userField" class="tv-focusable" placeholder="الاسم الثنائي والمواليد">
     <input type="password" id="passField" class="tv-focusable" placeholder="كلمة المرور">
+    
     <div id="mainBtns" class="btns">
         <button id="regBtn" class="btn-reg tv-focusable" onclick="register()">ارسال الطلب</button>
         <button id="logBtn" class="btn-log tv-focusable" onclick="login()">تسجيل دخول</button>
     </div>
     <button id="outBtn" class="btn-out tv-focusable" onclick="clearDeviceSession()">تسجيل خروج من الحساب</button>
+    
     <div id="statusMsg"></div>
+
+    <!-- إضافة أيقونات واتساب وتيليجرام ورقم الهاتف -->
+    <div class="contact-icons">
+        <a href="https://wa.me/1234567890" target="_blank" title="واتساب">💬</a>
+        <a href="https://t.me/username" target="_blank" title="تيليجرام">📨</a>
+        <a href="tel:1234567890" title="اتصال">📞</a>
+    </div>
+    <div class="contact-info">
+        <span>رقم الهاتف: 1234567890</span>
+    </div>
 </div>
 
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyCPVNySqB8Y21s_DJnn-jZFIb77UagAr4k",
-  authDomain: "firebaseapp.com",
-  databaseURL: "firebasedatabase.app",
+  authDomain: "drag-9user.firebaseapp.com",
+  databaseURL: "https://drag-9user-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "drag-9user",
   storageBucket: "drag-9user.firebasestorage.app",
   messagingSenderId: "716759119906",
@@ -110,7 +149,7 @@ const deviceId = generateRandomID();
 function showUI() {
     document.getElementById('loader').style.display = "none";
     document.getElementById('mainCard').style.display = "block";
-    updateFocusableElements(); // تحديث القائمة بعد عرض الواجهة
+    updateFocusableElements(); 
 }
 
 window.clearDeviceSession = function() {
@@ -139,9 +178,7 @@ window.onload = function() {
     const savedUser = localStorage.getItem("user");
     const savedPass = localStorage.getItem("pass");
 
-    if(savedUser) {
-        document.getElementById('userField').value = savedUser;
-    }
+    if(savedUser) { document.getElementById('userField').value = savedUser; }
 
     if (isLogoutMode && savedUser) {
         showUI();
@@ -220,7 +257,6 @@ let focusableElements = [];
 let currentIndex = 0;
 
 function updateFocusableElements() {
-    // جلب العناصر الظاهرة فقط للتحكم بها
     focusableElements = Array.from(document.querySelectorAll('.tv-focusable')).filter(el => {
         return window.getComputedStyle(el).display !== 'none' && window.getComputedStyle(el.parentElement).display !== 'none';
     });
@@ -234,62 +270,47 @@ document.addEventListener('keydown', function(e) {
     if (focusableElements.length === 0) return;
 
     switch(e.keyCode) {
-        case 38: // سهم فوق
+        case 38: // فوق
             if (currentIndex > 0) {
-                // التعامل مع الأزرار المتجاورة أفقياً
                 if(focusableElements[currentIndex].id === "logBtn" && focusableElements[currentIndex - 1].id === "regBtn"){
-                     currentIndex = currentIndex - 2; // تخطي الزر المجاور والذهاب للحقل الأعلى
-                } else {
-                     currentIndex--;
-                }
+                     currentIndex = currentIndex - 2;
+                } else { currentIndex--; }
             }
             focusableElements[currentIndex].focus();
             e.preventDefault();
             break;
-            
-        case 40: // سهم تحت
+        case 40: // تحت
             if (currentIndex < focusableElements.length - 1) {
                 if(focusableElements[currentIndex].id === "regBtn" && focusableElements[currentIndex + 1].id === "logBtn"){
-                     currentIndex = currentIndex + 2; // تخطي الزر المجاور للأسفل
-                } else {
-                     currentIndex++;
-                }
+                     currentIndex = currentIndex + 2;
+                } else { currentIndex++; }
                 if (currentIndex >= focusableElements.length) currentIndex = focusableElements.length - 1;
             }
             focusableElements[currentIndex].focus();
             e.preventDefault();
             break;
-
-        case 37: // سهم يسار (للتنقل بين الأزرار المتجاورة)
+        case 37: // يسار
             if(focusableElements[currentIndex].id === "regBtn" && document.getElementById('logBtn').style.display !== 'none') {
                 currentIndex = focusableElements.indexOf(document.getElementById('logBtn'));
                 focusableElements[currentIndex].focus();
             }
             e.preventDefault();
             break;
-
-        case 39: // سهم يمين (للتنقل بين الأزرار المتجاورة)
+        case 39: // يمين
             if(focusableElements[currentIndex].id === "logBtn") {
                 currentIndex = focusableElements.indexOf(document.getElementById('regBtn'));
                 focusableElements[currentIndex].focus();
             }
             e.preventDefault();
             break;
-
-        case 13: // زر OK / Enter
-            // إذا كان حقل إدخال نتركه يفتح الكيبورد الافتراضي للتلفاز، وإذا كان زر يقوم بالضغط عليه
+        case 13: // Enter
             if (document.activeElement.tagName !== 'INPUT') {
                 document.activeElement.click();
                 e.preventDefault();
             }
             break;
-
-        case 4:   // زر الرجوع في بعض شاشات التلفاز الذكية
-        case 27:  // زر Escape من الكيبورد
-            if(window.Android) {
-                window.Android.closeWindow(); // الخروج عبر كلاس الأندرويد
-                e.preventDefault();
-            }
+        case 4: case 27: 
+            if(window.Android) { window.Android.closeWindow(); e.preventDefault(); }
             break;
     }
 });
