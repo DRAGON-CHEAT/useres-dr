@@ -137,12 +137,12 @@ window.onload = function() {
 function register() {
     const user = document.getElementById('userField').value.trim();
     const msg = document.getElementById('statusMsg');
-    if(!user) { msg.style.color = "red"; msg.innerText = "⚠ يرجى إدخال الاسم أولاً"; return; }
+    if(!user) { msg.style.color = "yellow"; msg.innerText = "⚠ يرجى إدخال الاسم مستخدم أولاً"; return; }
     if(user.length < 8) { msg.style.color = "yellow"; msg.innerText = "⚠  الاسم يجب أن يكون ثنائي مع مواليد"; return; }
     
     db.ref("users/" + user).once("value").then((snap) => {
         if(snap.exists()) { 
-            msg.style.color = "red"; msg.innerText = "هذا المستخدم موجود بالفعل"; 
+            msg.style.color = "yellow"; msg.innerText = "هذا المستخدم موجود بالفعل"; 
         } else {
             db.ref("users/" + user).set({ username: user, currentDevice: deviceId, expirydate: "", password: "" }).then(() => {
                 msg.style.color = "yellow"; msg.innerText = "تم إرسال طلبك بنجاح يرجى مراسلتنا";
