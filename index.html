@@ -19,18 +19,25 @@
             border-top: 5px solid #ff0000; border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(3600deg); } }
 
         .dragon-card { display: none; background: #111; padding: 30px; border-radius: 15px; border-top: 4px solid #ff0000; width: 320px; text-align: center; box-shadow: 0 0 20px rgba(255,0,0,0.3); }
         
         h1 { color: #ff0000; margin-bottom: 20px; text-shadow: 0 0 10px #ff0000; }
-        input { width: 100%; padding: 12px; margin-bottom: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; text-align: center; }
-        .btns { display: flex; gap: 5px; }
-        button { flex: 1; padding: 12px; cursor: pointer; font-weight: bold; border-radius: 8px; border: none; transition: 0.3s; }
+        input { width: 100%; padding: 12px; margin-bottom: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; text-align: center; outline: none; }
+        .btns { display: flex; gap: 5px; margin-bottom: 10px; }
+        button { flex: 1; padding: 12px; cursor: pointer; font-weight: bold; border-radius: 8px; border: none; transition: 0.3s; outline: none; }
         .btn-reg { background: #ff0000; color: white; }
         .btn-log { background: #333; color: white; }
-        .btn-out { background: #b00; color: white; display: none; width: 100%; }
+        .btn-out { background: #b00; color: white; display: none; width: 100%; outline: none; }
         #statusMsg { margin-top: 15px; font-size: 14px; min-height: 20px; }
+
+        /* ستايل التركيز الخاص بريموت التلفاز */
+        .tv-focusable:focus {
+            border: 2px solid #ff0000 !important;
+            box-shadow: 0 0 15px #ff0000 !important;
+            transform: scale(1.03);
+        }
     </style>
 </head>
 <body>
@@ -42,13 +49,14 @@
 
 <div class="dragon-card" id="mainCard">
     <h1>DraGon TV</h1>
-    <input type="text" id="userField" placeholder="الاسم الثنائي والمواليد">
-    <input type="password" id="passField" placeholder="كلمة المرور">
+    <!-- إضافة كلاس tv-focusable لجميع العناصر القابلة للتفاعل -->
+    <input type="text" id="userField" class="tv-focusable" placeholder="الاسم الثنائي والمواليد">
+    <input type="password" id="passField" class="tv-focusable" placeholder="كلمة المرور">
     <div id="mainBtns" class="btns">
-        <button class="btn-reg" onclick="register()">ارسال الطلب</button>
-        <button class="btn-log" onclick="login()">تسجيل دخول</button>
+        <button id="regBtn" class="btn-reg tv-focusable" onclick="register()">ارسال الطلب</button>
+        <button id="logBtn" class="btn-log tv-focusable" onclick="login()">تسجيل دخول</button>
     </div>
-    <button id="outBtn" class="btn-out" onclick="clearDeviceSession()">تسجيل خروج من الحساب</button>
+    <button id="outBtn" class="btn-out tv-focusable" onclick="clearDeviceSession()">تسجيل خروج من الحساب</button>
     <div id="statusMsg"></div>
 </div>
 
@@ -79,6 +87,7 @@ const deviceId = generateRandomID();
 function showUI() {
     document.getElementById('loader').style.display = "none";
     document.getElementById('mainCard').style.display = "block";
+    updateFocusableElements(); // تحديث القائمة بعد عرض الواجهة
 }
 
 window.clearDeviceSession = function() {
@@ -107,7 +116,6 @@ window.onload = function() {
     const savedUser = localStorage.getItem("user");
     const savedPass = localStorage.getItem("pass");
 
-    // نضع الاسم المسجل دائماً في الحقل إذا كان موجوداً
     if(savedUser) {
         document.getElementById('userField').value = savedUser;
     }
@@ -118,6 +126,7 @@ window.onload = function() {
         document.getElementById('passField').style.display = "none";
         document.getElementById('mainBtns').style.display = "none";
         document.getElementById('outBtn').style.display = "block";
+        updateFocusableElements();
     } else if(savedUser && savedPass) {
         processLogin(savedUser, savedPass, true);
     } else {
@@ -128,7 +137,6 @@ window.onload = function() {
 function register() {
     const user = document.getElementById('userField').value.trim();
     const msg = document.getElementById('statusMsg');
-    
     if(!user) { msg.style.color = "red"; msg.innerText = "⚠ يرجى إدخال الاسم أولاً"; return; }
     if(user.length < 8) { msg.style.color = "red"; msg.innerText = "⚠ الاسم يجب أن يكون ثنائي"; return; }
     
@@ -147,11 +155,8 @@ function login() {
     const user = document.getElementById('userField').value.trim();
     const pass = document.getElementById('passField').value.trim();
     const msg = document.getElementById('statusMsg');
-
-    // التحقق من الحقول الفارغة عند الضغط على الزر
     if(!user) { msg.style.color = "red"; msg.innerText = "⚠ يرجى إدخال اسم المستخدم"; return; }
     if(!pass) { msg.style.color = "red"; msg.innerText = "⚠ يرجى إدخال كلمة المرور"; return; }
-    
     processLogin(user, pass, false);
 }
 
@@ -184,6 +189,87 @@ function processLogin(user, pass, isAuto) {
         }
     }).catch(() => showUI());
 }
+
+// ==========================================
+// نظام التحكم بالريموت (TV Navigation System)
+// ==========================================
+let focusableElements = [];
+let currentIndex = 0;
+
+function updateFocusableElements() {
+    // جلب العناصر الظاهرة فقط للتحكم بها
+    focusableElements = Array.from(document.querySelectorAll('.tv-focusable')).filter(el => {
+        return window.getComputedStyle(el).display !== 'none' && window.getComputedStyle(el.parentElement).display !== 'none';
+    });
+    if(focusableElements.length > 0) {
+        currentIndex = 0;
+        focusableElements[currentIndex].focus();
+    }
+}
+
+document.addEventListener('keydown', function(e) {
+    if (focusableElements.length === 0) return;
+
+    switch(e.keyCode) {
+        case 38: // سهم فوق
+            if (currentIndex > 0) {
+                // التعامل مع الأزرار المتجاورة أفقياً
+                if(focusableElements[currentIndex].id === "logBtn" && focusableElements[currentIndex - 1].id === "regBtn"){
+                     currentIndex = currentIndex - 2; // تخطي الزر المجاور والذهاب للحقل الأعلى
+                } else {
+                     currentIndex--;
+                }
+            }
+            focusableElements[currentIndex].focus();
+            e.preventDefault();
+            break;
+            
+        case 40: // سهم تحت
+            if (currentIndex < focusableElements.length - 1) {
+                if(focusableElements[currentIndex].id === "regBtn" && focusableElements[currentIndex + 1].id === "logBtn"){
+                     currentIndex = currentIndex + 2; // تخطي الزر المجاور للأسفل
+                } else {
+                     currentIndex++;
+                }
+                if (currentIndex >= focusableElements.length) currentIndex = focusableElements.length - 1;
+            }
+            focusableElements[currentIndex].focus();
+            e.preventDefault();
+            break;
+
+        case 37: // سهم يسار (للتنقل بين الأزرار المتجاورة)
+            if(focusableElements[currentIndex].id === "regBtn" && document.getElementById('logBtn').style.display !== 'none') {
+                currentIndex = focusableElements.indexOf(document.getElementById('logBtn'));
+                focusableElements[currentIndex].focus();
+            }
+            e.preventDefault();
+            break;
+
+        case 39: // سهم يمين (للتنقل بين الأزرار المتجاورة)
+            if(focusableElements[currentIndex].id === "logBtn") {
+                currentIndex = focusableElements.indexOf(document.getElementById('regBtn'));
+                focusableElements[currentIndex].focus();
+            }
+            e.preventDefault();
+            break;
+
+        case 13: // زر OK / Enter
+            // إذا كان حقل إدخال نتركه يفتح الكيبورد الافتراضي للتلفاز، وإذا كان زر يقوم بالضغط عليه
+            if (document.activeElement.tagName !== 'INPUT') {
+                document.activeElement.click();
+                e.preventDefault();
+            }
+            break;
+
+        case 4:   // زر الرجوع في بعض شاشات التلفاز الذكية
+        case 27:  // زر Escape من الكيبورد
+            if(window.Android) {
+                window.Android.closeWindow(); // الخروج عبر كلاس الأندرويد
+                e.preventDefault();
+            }
+            break;
+    }
+});
 </script>
 </body>
 </html>
