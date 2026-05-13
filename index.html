@@ -27,7 +27,7 @@
         input { width: 100%; padding: 12px; margin-bottom: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; text-align: center; outline: none; }
         .btns { display: flex; gap: 5px; margin-bottom: 10px; }
         button { flex: 1; padding: 12px; cursor: pointer; font-weight: bold; border-radius: 8px; border: none; transition: 0.3s; outline: none; }
-        .btn-reg { background: #ff0000; color: white; }
+        .btn-reg { background: #338; color: white; }
         .btn-log { background: #333; color: white; }
         .btn-out { background: #b00; color: white; display: none; width: 100%; outline: none; }
         #statusMsg { margin-top: 15px; font-size: 14px; min-height: 20px; }
@@ -138,14 +138,14 @@ function register() {
     const user = document.getElementById('userField').value.trim();
     const msg = document.getElementById('statusMsg');
     if(!user) { msg.style.color = "red"; msg.innerText = "⚠ يرجى إدخال الاسم أولاً"; return; }
-    if(user.length < 8) { msg.style.color = "red"; msg.innerText = "⚠ الاسم يجب أن يكون ثنائي"; return; }
+    if(user.length < 8) { msg.style.color = "yellow"; msg.innerText = "⚠  الاسم يجب أن يكون ثنائي مع مواليد"; return; }
     
     db.ref("users/" + user).once("value").then((snap) => {
         if(snap.exists()) { 
             msg.style.color = "red"; msg.innerText = "هذا المستخدم موجود بالفعل"; 
         } else {
             db.ref("users/" + user).set({ username: user, currentDevice: deviceId, expirydate: "", password: "" }).then(() => {
-                msg.style.color = "yellow"; msg.innerText = "تم إرسال الطلب بنجاح";
+                msg.style.color = "yellow"; msg.innerText = "تم إرسال طلبك بنجاح يرجى مراسلتنا";
             });
         }
     });
@@ -167,7 +167,7 @@ function processLogin(user, pass, isAuto) {
             const data = snap.val();
             if(data.expirydate && new Date(data.expirydate) < new Date()) {
                 showUI();
-                msg.style.color = "red"; msg.innerText = "⚠ انتهى اشتراكك"; return;
+                msg.style.color = "yellow"; msg.innerText = "⚠ انتهى اشتراكك"; return;
             }
             if (!data.currentDevice || data.currentDevice === "") {
                 db.ref("users/" + user + "/currentDevice").set(deviceId);
@@ -181,11 +181,11 @@ function processLogin(user, pass, isAuto) {
                 if(window.Android) { window.Android.closeWindow(); }
             } else {
                 showUI(); 
-                if(!isAuto) { msg.style.color = "red"; msg.innerText = "الباسورد خطأ"; }
+                if(!isAuto) { msg.style.color = "yellow"; msg.innerText = "الباسورد خطأ"; }
             }
         } else {
             showUI(); 
-            if(!isAuto) { msg.style.color = "red"; msg.innerText = "المستخدم غير موجود"; }
+            if(!isAuto) { msg.style.color = "yellow"; msg.innerText = "المستخدم غير موجود"; }
         }
     }).catch(() => showUI());
 }
