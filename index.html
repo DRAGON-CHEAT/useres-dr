@@ -5,7 +5,7 @@
     <title>Dragon TV Services</title>
     <script src="gstatic.com"></script>
     <script src="gstatic.com"></script>
-    <!-- مكتبة الأيقونات لعرض شعار الواتساب والتليجرام دون التأثير على النظام -->
+    <!-- مكتبة الأيقونات لعرض شعار الواتساب والتليجرام دون التأثير على عمل النظام -->
     <link rel="stylesheet" href="cloudflare.com">
 
     <style>
@@ -23,7 +23,7 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(3600deg); } }
 
-        /* تم زيادة العرض ليصبح مستطيلاً عريضاً مع الحفاظ التام على تصميمك، حدك العلوي الأحمر، والتوهج المحيط */
+        /* تم زيادة العرض ليصبح مستطيلاً عريضاً مع الحفاظ على التصميم والحد العلوي والتوهج الأحمر المحيط بالكارد */
         .dragon-card { 
             display: none; 
             background: #111; 
@@ -31,14 +31,14 @@
             border-radius: 15px; 
             border-top: 4px solid #ff0000; 
             width: 90%;
-            max-width: 580px; /* زيادة العرض بناءً على طلبك */
+            max-width: 580px; /* زيادة العرض ليتناسب مع شاشات التلفاز والهواتف */
             text-align: center; 
             box-shadow: 0 0 20px rgba(255,0,0,0.3); 
             position: relative; /* لضبط تموضع عناصر التواصل بالزاوية اليسرى */
             box-sizing: border-box;
         }
         
-        /* حاوية أيقونات التواصل المضافة حديثاً في الزاوية اليسرى العليا داخل النافذة */
+        /* حاوية أيقونات التواصل المضافة حديثاً في الزاوية اليسرى العليا داخل الكارد */
         .contact-container {
             position: absolute;
             top: 15px;
@@ -285,7 +285,7 @@ document.addEventListener('keydown', function(e) {
                 if(focusableElements[currentIndex].id === "logBtn" && focusableElements[currentIndex - 1].id === "regBtn"){
                      currentIndex = currentIndex - 2; // تخطي الزر المجاور والذهاب للحقل الأعلى
                 } else if(focusableElements[currentIndex].id === "tgBtn" || focusableElements[currentIndex].id === "waBtn") {
-                     return; // منع الحركة للأعلى عند الوصول للأيقونات
+                     return; // منع الفوكس من الخروج للأعلى عند الوقوف على الأيقونات
                 } else {
                      currentIndex--;
                 }
@@ -332,7 +332,7 @@ document.addEventListener('keydown', function(e) {
             break;
 
         case 13: // زر OK / Enter
-            // ترك حقول الإدخال تفتح الكيبورد الافتراضي للتلفاز أو الهاتف بحرية تامة دون أي قيود
+            // ترك حقول الإدخال تفتح الكيبورد الافتراضي للتلفاز أو الهاتف فوراً عند الضغط على OK دون اعتراض
             if (document.activeElement.tagName === 'INPUT') {
                 document.activeElement.focus();
             } else {
@@ -344,7 +344,7 @@ document.addEventListener('keydown', function(e) {
         case 4:   // زر الرجوع في بعض شاشات التلفاز الذكية
         case 27:  // زر Escape من الكيبورد
             if (document.activeElement.tagName === 'INPUT') {
-                document.activeElement.blur(); // الخروج من الحقل لإخفاء الكيبورد بشكل طبيعي
+                document.activeElement.blur(); // الخروج من الحقل لإخفاء الكيبورد بشكل طبيعي بزر الرجوع
                 e.preventDefault();
             } else if(window.Android) {
                 window.Android.closeWindow(); // الخروج عبر كلاس الأندرويد
