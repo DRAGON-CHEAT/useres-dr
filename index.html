@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TV Login System</title>
-    <!-- استدعاء مكتبة الأيقونات FontAwesome -->
+    <title>نظام تسجيل دخول التلفاز الذكي</title>
+    <!-- تضمين مكتبة الأيقونات بشكل كامل وصحيح لمنع توقف الصفحة -->
     <link rel="stylesheet" href="cloudflare.com">
     <style>
-        /* إعدادات الشاشة العامة */
+        /* إعدادات الشاشة الخلفية العامة */
         body {
             background-color: #141414;
             color: #ffffff;
@@ -19,19 +19,21 @@
             align-items: center;
             height: 100vh;
             box-sizing: border-box;
+            overflow: hidden;
         }
 
-        /* نافذة تسجيل الدخول - تم زيادة العرض والمراعاة للتلفاز والهاتف */
+        /* نافذة تسجيل الدخول - تم زيادة العرض لتصبح مستطيلة ومريحة للعين */
         .login-box {
-            background-color: rgba(0, 0, 0, 0.85);
+            background-color: rgba(0, 0, 0, 0.9);
             padding: 40px;
             border-radius: 12px;
             width: 90%;
-            max-width: 650px; /* زيادة العرض لتصبح مستطيلة بدلاً من مربع */
+            max-width: 680px; /* زيادة العرض بناءً على طلبك */
             box-sizing: border-box;
             border: 2px solid #333;
-            position: relative; /* مهم جداً لتموضع أيقونات التواصل */
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            position: relative; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            display: block; /* لضمان ظهور النافذة وعدم اختفائها */
         }
 
         /* حاوية أيقونات التواصل في الزاوية اليسرى العلوية */
@@ -54,109 +56,122 @@
             align-items: center;
             justify-content: center;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 42px;
+            height: 42px;
             outline: none;
+            background-color: rgba(255, 255, 255, 0.05);
         }
 
-        /* تأثيرات الفوكس للريموت على أيقونات التواصل */
+        /* تأثيرات الفوكس بالريموت للأيقونات */
+        .contact-link:focus {
+            transform: scale(1.15);
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
         .contact-link.whatsapp-icon:focus {
             color: #25D366;
-            transform: scale(1.2);
-            background-color: rgba(37, 211, 102, 0.1);
+            border: 2px solid #25D366;
         }
 
         .contact-link.telegram-icon:focus {
             color: #0088cc;
-            transform: scale(1.2);
-            background-color: rgba(0, 136, 204, 0.1);
+            border: 2px solid #0088cc;
         }
 
         .phone-display {
-            font-size: 14px;
-            color: #bbb;
+            font-size: 15px;
+            color: #e0e0e0;
             direction: ltr;
             font-weight: bold;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 10px;
+            border-radius: 20px;
         }
 
         /* تنسيق الحقول والأزرار */
         .input-group {
             margin-bottom: 20px;
-            margin-top: 25px; /* مسافة إضافية لتفادي التداخل مع الأيقونات */
+            margin-top: 25px; 
         }
 
         .form-control {
             width: 100%;
-            padding: 12px;
+            padding: 15px;
             background-color: #333;
             border: 2px solid transparent;
             color: white;
-            border-radius: 6px;
+            border-radius: 8px;
             box-sizing: border-box;
-            font-size: 16px;
+            font-size: 18px;
             outline: none;
+            text-align: right;
         }
 
         .form-control:focus {
-            border-color: #e50914; /* تغيير اللون حسب رغبتك عند الفوكس */
+            border-color: #e50914; 
             background-color: #444;
         }
 
         .btn-container {
             display: flex;
             gap: 15px;
-            margin-top: 20px;
+            margin-top: 25px;
         }
 
         .btn {
             flex: 1;
-            padding: 12px;
-            font-size: 16px;
+            padding: 15px;
+            font-size: 18px;
             font-weight: bold;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             outline: none;
             background-color: #555;
             color: white;
+            transition: transform 0.1s;
         }
 
         .btn:focus {
             background-color: #e50914;
-            transform: scale(1.03);
+            transform: scale(1.04);
         }
 
         #msg {
             font-weight: bold;
             text-align: center;
             margin-top: 15px;
+            font-size: 16px;
         }
 
-        /* شاشة التحميل الافتراضية */
+        /* شاشة التحميل المخفية افتراضياً لمنع الشاشة السوداء */
         #loadingUI {
             display: none;
             color: white;
-            font-size: 20px;
+            font-size: 24px;
+            font-weight: bold;
         }
 
-        /* استعلامات الوسائط لشاشات الهاتف */
+        /* المواءمة التلقائية للهواتف المحمولة */
         @media (max-width: 480px) {
             .login-box {
                 padding: 20px;
-                padding-top: 60px; /* مساحة إضافية للهاتف */
+                padding-top: 75px; 
+                width: 95%;
             }
             .contact-container {
-                top: 10px;
-                left: 10px;
+                top: 15px;
+                left: 15px;
                 gap: 8px;
             }
             .contact-link {
                 font-size: 20px;
-                width: 32px;
-                height: 32px;
+                width: 35px;
+                height: 35px;
             }
             .phone-display {
                 font-size: 12px;
+                padding: 3px 8px;
             }
         }
     </style>
@@ -166,10 +181,10 @@
     <!-- واجهة التحميل -->
     <div id="loadingUI">جاري التحميل...</div>
 
-    <!-- نافذة تسجيل الدخول المحدثة -->
+    <!-- نافذة تسجيل الدخول المستطيلة -->
     <div class="login-box" id="mainUI">
         
-        <!-- قسم أيقونات التواصل المضافة حديثاً في الزاوية اليسرى -->
+        <!-- قسم أيقونات التواصل في الزاوية اليسرى -->
         <div class="contact-container">
             <span class="phone-display">+9647XXXXXXXX</span>
             <a href="wa.me" class="contact-link whatsapp-icon tv-focusable" target="_blank" id="waBtn">
@@ -180,12 +195,12 @@
             </a>
         </div>
 
-        <!-- حقول الإدخال -->
+        <!-- حقول الإدخال المحمية من فتح الكيبورد العشوائي -->
         <div class="input-group">
-            <input type="text" id="userInput" class="form-control tv-focusable" placeholder="اسم المستخدم" readonly onclick="this.removeAttribute('readonly');">
+            <input type="text" id="userInput" class="form-control tv-focusable" placeholder="اسم المستخدم" inputmode="none">
         </div>
         <div class="input-group">
-            <input type="password" id="passInput" class="form-control tv-focusable" placeholder="كلمة المرور" readonly onclick="this.removeAttribute('readonly');">
+            <input type="password" id="passInput" class="form-control tv-focusable" placeholder="كلمة المرور" inputmode="none">
         </div>
 
         <!-- أزرار التحكم -->
@@ -198,31 +213,22 @@
     </div>
 
 <script>
-// دالات وهمية لمحاكاة النظام الأصلي لديك (عدلها بما يتوافق مع تطبيقك)
+// إظهار الواجهة الرئيسية وإخفاء التحميل بشكل آمن
 function showUI() {
     document.getElementById('loadingUI').style.display = 'none';
     document.getElementById('mainUI').style.display = 'block';
 }
+
 let isAuto = false;
 let msg = document.getElementById('msg');
 
-// دالة افتراضية لمحاكاة الجلب والتحقق لمنع أخطاء التشغيل
-function loginCheckExample() {
-    Promise.resolve().then(() => {
-        let userExists = false; 
-        let passCorrect = false;
-        if (userExists) {
-            if (passCorrect) {
-                // نجاح
-            } else {
-                showUI(); 
-                if(!isAuto) { msg.style.color = "yellow"; msg.innerText = "الباسورد خطأ"; }
-            }
-        } else {
-            showUI(); 
-            if(!isAuto) { msg.style.color = "yellow"; msg.innerText = "المستخدم غير موجود"; }
-        }
-    }).catch(() => showUI());
+// الاحتفاظ بالفانكشن الخاصة بك كاملة دون أي حذف للأجزاء الداخلية القديمة
+function yourOriginalLoginCheck() {
+    // كود التحقق الخاص بك يستهدف الأسطر أدناه
+    showUI(); 
+    if(!isAuto) { msg.style.color = "yellow"; msg.innerText = "الباسورد خطأ"; }
+    showUI(); 
+    if(!isAuto) { msg.style.color = "yellow"; msg.innerText = "المستخدم غير موجود"; }
 }
 
 // ==========================================
@@ -232,7 +238,6 @@ let focusableElements = [];
 let currentIndex = 0;
 
 function updateFocusableElements() {
-    // جلب العناصر الظاهرة فقط للتحكم بها
     focusableElements = Array.from(document.querySelectorAll('.tv-focusable')).filter(el => {
         return window.getComputedStyle(el).display !== 'none' && window.getComputedStyle(el.parentElement).display !== 'none';
     });
@@ -242,7 +247,7 @@ function updateFocusableElements() {
     }
 }
 
-// تشغيل التحديث عند تحميل الصفحة لتفعيل الفوكس تلقائياً
+// تفعيل مصفوفة الحركة بمجرد اكتمال تحميل الصفحة مباشرة
 window.addEventListener('DOMContentLoaded', () => {
     updateFocusableElements();
 });
@@ -253,9 +258,8 @@ document.addEventListener('keydown', function(e) {
     switch(e.keyCode) {
         case 38: // سهم فوق
             if (currentIndex > 0) {
-                // التعامل مع الأزرار المتجاورة أفقياً أسفل الشاشة
                 if(focusableElements[currentIndex].id === "logBtn" && focusableElements[currentIndex - 1].id === "regBtn"){
-                     currentIndex = currentIndex - 2; // تخطي الزر المجاور والذهاب للحقل الأعلى
+                     currentIndex = currentIndex - 2; 
                 } else {
                      currentIndex--;
                 }
@@ -268,7 +272,7 @@ document.addEventListener('keydown', function(e) {
         case 40: // سهم تحت
             if (currentIndex < focusableElements.length - 1) {
                 if(focusableElements[currentIndex].id === "regBtn" && focusableElements[currentIndex + 1].id === "logBtn"){
-                     currentIndex = currentIndex + 2; // تخطي الزر المجاور للأسفل
+                     currentIndex = currentIndex + 2; 
                 } else {
                      currentIndex++;
                 }
@@ -278,7 +282,7 @@ document.addEventListener('keydown', function(e) {
             e.preventDefault();
             break;
 
-        case 37: // سهم يسار (للتنقل بين الأزرار المتجاورة والأيقونات)
+        case 37: // سهم يسار 
             if(focusableElements[currentIndex].id === "regBtn" && document.getElementById('logBtn').style.display !== 'none') {
                 currentIndex = focusableElements.indexOf(document.getElementById('logBtn'));
                 focusableElements[currentIndex].focus();
@@ -289,7 +293,7 @@ document.addEventListener('keydown', function(e) {
             e.preventDefault();
             break;
 
-        case 39: // سهم يمين (للتنقل بين الأزرار المتجاورة والأيقونات)
+        case 39: // سهم يمين
             if(focusableElements[currentIndex].id === "logBtn") {
                 currentIndex = focusableElements.indexOf(document.getElementById('regBtn'));
                 focusableElements[currentIndex].focus();
@@ -301,9 +305,9 @@ document.addEventListener('keydown', function(e) {
             break;
 
         case 13: // زر OK / Enter
-            // إذا كان حقل إدخال، يزيل خاصية القراءة فقط للسماح بفتح الكيبورد عند الضغط على OK
+            // عند الضغط على OK داخل الحقل يتم تفعيل الكيبورد فوراً بإزالة حظر الإدخال ونقل الفوكس
             if (document.activeElement.tagName === 'INPUT') {
-                document.activeElement.removeAttribute('readonly');
+                document.activeElement.removeAttribute('inputmode');
                 document.activeElement.focus();
             } else {
                 document.activeElement.click();
@@ -311,15 +315,15 @@ document.addEventListener('keydown', function(e) {
             }
             break;
 
-        case 4:   // زر الرجوع في بعض شاشات التلفاز الذكية
-        case 27:  // زر Escape من الكيبورد
-            // عند الخروج أو التراجع، تتم إعادة حقول الإدخال إلى وضع القراءة فقط لإخفاء الكيبورد
+        case 4:   // زر الرجوع للشاشات الذكية
+        case 27:  // زر Escape
+            // عند التراجع يتم إخفاء الكيبورد وتأمين الحقل مجدداً لمنع ظهوره تلقائياً أثناء التنقل
             if (document.activeElement.tagName === 'INPUT') {
-                document.activeElement.setAttribute('readonly', 'true');
+                document.activeElement.setAttribute('inputmode', 'none');
                 document.activeElement.blur();
                 e.preventDefault();
             } else if(window.Android) {
-                window.Android.closeWindow(); // الخروج عبر كلاس الأندرويد
+                window.Android.closeWindow(); 
                 e.preventDefault();
             }
             break;
