@@ -44,7 +44,7 @@
 
 <div id="loader">
     <div class="spinner"></div>
-    <p style="margin-top:15px; color:#fff; font-size:18px;">جاري التحقق...</p>
+    <p style="margin-top:15px; color:#fff; font-size:18px;">جاري التحقق..</p>
 </div>
 
 <div class="dragon-card" id="mainCard">
@@ -137,12 +137,12 @@ window.onload = function() {
 function register() {
     const user = document.getElementById('userField').value.trim();
     const msg = document.getElementById('statusMsg');
-    if(!user) { msg.style.color = "yellow"; msg.innerText = "⚠ يرجى إدخال الاسم مستخدم أولاً"; return; }
+    if(!user) { msg.style.color = "yellow"; msg.innerText = "⚠ يرجى إدخال أسم المستخدم أولاً"; return; }
     if(user.length < 8) { msg.style.color = "yellow"; msg.innerText = "⚠  الاسم يجب أن يكون ثنائي مع مواليد"; return; }
     
     db.ref("users/" + user).once("value").then((snap) => {
         if(snap.exists()) { 
-            msg.style.color = "yellow"; msg.innerText = "هذا المستخدم موجود بالفعل"; 
+            msg.style.color = "red"; msg.innerText = "⚠ هذا المستخدم موجود بالفعل"; 
         } else {
             db.ref("users/" + user).set({ username: user, currentDevice: deviceId, expirydate: "", password: "" }).then(() => {
                 msg.style.color = "yellow"; msg.innerText = "تم إرسال طلبك بنجاح يرجى مراسلتنا";
@@ -155,8 +155,8 @@ function login() {
     const user = document.getElementById('userField').value.trim();
     const pass = document.getElementById('passField').value.trim();
     const msg = document.getElementById('statusMsg');
-    if(!user) { msg.style.color = "red"; msg.innerText = "⚠ يرجى إدخال اسم المستخدم"; return; }
-    if(!pass) { msg.style.color = "red"; msg.innerText = "⚠ يرجى إدخال كلمة المرور"; return; }
+    if(!user) { msg.style.color = "yellow"; msg.innerText = "⚠ يرجى إدخال اسم المستخدم"; return; }
+    if(!pass) { msg.style.color = "yellow"; msg.innerText = "⚠ يرجى إدخال كلمة المرور"; return; }
     processLogin(user, pass, false);
 }
 
