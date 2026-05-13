@@ -5,7 +5,7 @@
     <title>Dragon TV Services</title>
     <script src="gstatic.com"></script>
     <script src="gstatic.com"></script>
-    <!-- إضافة مكتبة الأيقونات لعرض شعارات الواتساب والتليجرام -->
+    <!-- مكتبة الأيقونات لعرض شعار الواتساب والتليجرام دون التأثير على النظام -->
     <link rel="stylesheet" href="cloudflare.com">
 
     <style>
@@ -23,22 +23,22 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(3600deg); } }
 
-        /* تعديل حجم النافذة لتصبح مستطيلة وعريضة مع الحفاظ على التنسيق واللون الأحمر المحيط بها */
+        /* تم زيادة العرض ليصبح مستطيلاً عريضاً مع الحفاظ التام على تصميمك، حدك العلوي الأحمر، والتوهج المحيط */
         .dragon-card { 
             display: none; 
             background: #111; 
-            padding: 40px; 
+            padding: 30px; 
             border-radius: 15px; 
             border-top: 4px solid #ff0000; 
             width: 90%;
-            max-width: 580px; /* زيادة العرض ليتناسب مع شاشات التلفاز والهواتف */
+            max-width: 580px; /* زيادة العرض بناءً على طلبك */
             text-align: center; 
             box-shadow: 0 0 20px rgba(255,0,0,0.3); 
-            position: relative; /* لتمكين تموضع الأيقونات في الزاوية اليسرى */
+            position: relative; /* لضبط تموضع عناصر التواصل بالزاوية اليسرى */
             box-sizing: border-box;
         }
         
-        /* حاوية أيقونات التواصل المضافة حديثاً في الزاوية اليسرى العليا */
+        /* حاوية أيقونات التواصل المضافة حديثاً في الزاوية اليسرى العليا داخل النافذة */
         .contact-container {
             position: absolute;
             top: 15px;
@@ -59,7 +59,7 @@
             height: 35px;
             border-radius: 50%;
             outline: none;
-            transition: transform 0.2s;
+            transition: 0.2s;
         }
         .phone-display {
             font-size: 13px;
@@ -84,15 +84,11 @@
             transform: scale(1.03);
         }
         
-        /* تلوين أيقونات التواصل عند التركيز عليها بالريموت */
-        .contact-link.whatsapp-icon:focus {
-            color: #25D366 !important;
-        }
-        .contact-link.telegram-icon:focus {
-            color: #0088cc !important;
-        }
+        /* تلوين الأيقونات عند وقوف الريموت عليها */
+        .contact-link.whatsapp-icon:focus { color: #25D366 !important; }
+        .contact-link.telegram-icon:focus { color: #0088cc !important; }
 
-        /* تنسيق إضافي لضمان ظهور سليم على شاشات الهواتف الصغيرة */
+        /* التنسيق المتجاوب مع الهواتف الذكية */
         @media (max-width: 480px) {
             .dragon-card { padding: 20px; padding-top: 55px; }
             .contact-container { top: 12px; left: 12px; gap: 8px; }
@@ -109,7 +105,7 @@
 </div>
 
 <div class="dragon-card" id="mainCard">
-    <!-- قسم أيقونات التواصل المضافة حديثاً في الزاوية اليسرى -->
+    <!-- حاوية الأيقونات ورقم الهاتف المضافة في الزاوية اليسرى العليا -->
     <div class="contact-container">
         <span class="phone-display">+9647XXXXXXXX</span>
         <a href="wa.me" class="contact-link whatsapp-icon tv-focusable" target="_blank" id="waBtn">
@@ -289,8 +285,7 @@ document.addEventListener('keydown', function(e) {
                 if(focusableElements[currentIndex].id === "logBtn" && focusableElements[currentIndex - 1].id === "regBtn"){
                      currentIndex = currentIndex - 2; // تخطي الزر المجاور والذهاب للحقل الأعلى
                 } else if(focusableElements[currentIndex].id === "tgBtn" || focusableElements[currentIndex].id === "waBtn") {
-                     // منع الخروج للأعلى من الأيقونات
-                     return;
+                     return; // منع الحركة للأعلى عند الوصول للأيقونات
                 } else {
                      currentIndex--;
                 }
@@ -317,7 +312,7 @@ document.addEventListener('keydown', function(e) {
                 currentIndex = focusableElements.indexOf(document.getElementById('logBtn'));
                 focusableElements[currentIndex].focus();
             } else if(focusableElements[currentIndex].id === "waBtn" && document.getElementById('tgBtn').style.display !== 'none') {
-                // إصلاح الحركة المعكوسة: التنقل من الواتساب (يمين) إلى التليجرام (يسار) بالسهم اليسار
+                // إصلاح الحركة المعكوسة: السهم اليسار ينقلك من الواتساب (يمين) إلى التليجرام (يسار)
                 currentIndex = focusableElements.indexOf(document.getElementById('tgBtn'));
                 focusableElements[currentIndex].focus();
             }
@@ -329,7 +324,7 @@ document.addEventListener('keydown', function(e) {
                 currentIndex = focusableElements.indexOf(document.getElementById('regBtn'));
                 focusableElements[currentIndex].focus();
             } else if(focusableElements[currentIndex].id === "tgBtn") {
-                // إصلاح الحركة المعكوسة: التنقل من التليجرام (يسار) إلى الواتساب (يمين) بالسهم اليمين
+                // إصلاح الحركة المعكوسة: السهم اليمين ينقلك من التليجرام (يسار) إلى الواتساب (يمين)
                 currentIndex = focusableElements.indexOf(document.getElementById('waBtn'));
                 focusableElements[currentIndex].focus();
             }
@@ -337,9 +332,8 @@ document.addEventListener('keydown', function(e) {
             break;
 
         case 13: // زر OK / Enter
-            // السماح لحقول الإدخال بفتح الكيبورد الافتراضي للتلفاز بشكل طبيعي فوراً عند الضغط على OK
+            // ترك حقول الإدخال تفتح الكيبورد الافتراضي للتلفاز أو الهاتف بحرية تامة دون أي قيود
             if (document.activeElement.tagName === 'INPUT') {
-                // نترك المتصفح أو نظام الأندرويد يفتح الكيبورد الافتراضي بحرية تامة دون اعتراض
                 document.activeElement.focus();
             } else {
                 document.activeElement.click();
@@ -350,8 +344,7 @@ document.addEventListener('keydown', function(e) {
         case 4:   // زر الرجوع في بعض شاشات التلفاز الذكية
         case 27:  // زر Escape من الكيبورد
             if (document.activeElement.tagName === 'INPUT') {
-                // إذا كان التركيز داخل الحقل واللوحة مفتوحة، يقوم زر الرجوع بإلغاء الفوكس لإغلاق الكيبورد
-                document.activeElement.blur();
+                document.activeElement.blur(); // الخروج من الحقل لإخفاء الكيبورد بشكل طبيعي
                 e.preventDefault();
             } else if(window.Android) {
                 window.Android.closeWindow(); // الخروج عبر كلاس الأندرويد
