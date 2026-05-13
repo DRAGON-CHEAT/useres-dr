@@ -5,8 +5,6 @@
     <title>Dragon TV Services</title>
     <script src="gstatic.com"></script>
     <script src="gstatic.com"></script>
-    <!-- مكتبة الأيقونات لعرض شعار الواتساب والتليجرام دون التأثير على عمل النظام -->
-    <link rel="stylesheet" href="cloudflare.com">
 
     <style>
         body { background-color: #000; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
@@ -23,7 +21,7 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(3600deg); } }
 
-        /* تم زيادة العرض ليصبح مستطيلاً عريضاً مع الحفاظ على التصميم والحد العلوي والتوهج الأحمر المحيط بالكارد */
+        /* تعديل العرض ليصبح مستطيلاً بناءً على طلبك مع الحفاظ على التصميم واللون والتوهج الأحمر المحيط بنسبة 100% */
         .dragon-card { 
             display: none; 
             background: #111; 
@@ -31,14 +29,14 @@
             border-radius: 15px; 
             border-top: 4px solid #ff0000; 
             width: 90%;
-            max-width: 580px; /* زيادة العرض ليتناسب مع شاشات التلفاز والهواتف */
+            max-width: 580px; /* زيادة العرض للشاشات والتلفاز */
             text-align: center; 
             box-shadow: 0 0 20px rgba(255,0,0,0.3); 
-            position: relative; /* لضبط تموضع عناصر التواصل بالزاوية اليسرى */
+            position: relative; /* مهم لتموضع الأيقونات في الزاوية اليسرى العليا */
             box-sizing: border-box;
         }
         
-        /* حاوية أيقونات التواصل المضافة حديثاً في الزاوية اليسرى العليا داخل الكارد */
+        /* حاوية أيقونات التواصل المضافة في الزاوية اليسرى العليا */
         .contact-container {
             position: absolute;
             top: 15px;
@@ -83,12 +81,12 @@
             box-shadow: 0 0 15px #ff0000 !important;
             transform: scale(1.03);
         }
-        
-        /* تلوين الأيقونات عند وقوف الريموت عليها */
+
+        /* تلوين الأيقونات عند الفوكس */
         .contact-link.whatsapp-icon:focus { color: #25D366 !important; }
         .contact-link.telegram-icon:focus { color: #0088cc !important; }
 
-        /* التنسيق المتجاوب مع الهواتف الذكية */
+        /* المواءمة والتنسيق مع الهواتف الذكية */
         @media (max-width: 480px) {
             .dragon-card { padding: 20px; padding-top: 55px; }
             .contact-container { top: 12px; left: 12px; gap: 8px; }
@@ -96,6 +94,8 @@
             .phone-display { font-size: 11px; }
         }
     </style>
+    <!-- مكتبة الأيقونات لعرض شعارات التواصل دون التداخل مع أي سكربت آخر -->
+    <link rel="stylesheet" href="cloudflare.com">
 </head>
 <body>
 
@@ -105,7 +105,7 @@
 </div>
 
 <div class="dragon-card" id="mainCard">
-    <!-- حاوية الأيقونات ورقم الهاتف المضافة في الزاوية اليسرى العليا -->
+    <!-- حاوية أيقونات التواصل المضافة حديثاً في الزاوية اليسرى -->
     <div class="contact-container">
         <span class="phone-display">+9647XXXXXXXX</span>
         <a href="wa.me" class="contact-link whatsapp-icon tv-focusable" target="_blank" id="waBtn">
@@ -285,7 +285,7 @@ document.addEventListener('keydown', function(e) {
                 if(focusableElements[currentIndex].id === "logBtn" && focusableElements[currentIndex - 1].id === "regBtn"){
                      currentIndex = currentIndex - 2; // تخطي الزر المجاور والذهاب للحقل الأعلى
                 } else if(focusableElements[currentIndex].id === "tgBtn" || focusableElements[currentIndex].id === "waBtn") {
-                     return; // منع الفوكس من الخروج للأعلى عند الوقوف على الأيقونات
+                     return; // منع الفوكس من الخروج للأعلى خارج الصندوق عند الأيقونات
                 } else {
                      currentIndex--;
                 }
@@ -307,12 +307,12 @@ document.addEventListener('keydown', function(e) {
             e.preventDefault();
             break;
 
-        case 37: // سهم يسار (للتنقل بين الأزرار والأيقونات المتجاورة)
+        case 37: // سهم يسار (لالتفاف التنقل للأزرار والأيقونات المتجاورة)
             if(focusableElements[currentIndex].id === "regBtn" && document.getElementById('logBtn').style.display !== 'none') {
                 currentIndex = focusableElements.indexOf(document.getElementById('logBtn'));
                 focusableElements[currentIndex].focus();
             } else if(focusableElements[currentIndex].id === "waBtn" && document.getElementById('tgBtn').style.display !== 'none') {
-                // إصلاح الحركة المعكوسة: السهم اليسار ينقلك من الواتساب (يمين) إلى التليجرام (يسار)
+                // إصلاح مشكلة الاتجاه المعكوس: السهم اليسار يتنقل من الواتساب (يمين) إلى التليجرام (يسار)
                 currentIndex = focusableElements.indexOf(document.getElementById('tgBtn'));
                 focusableElements[currentIndex].focus();
             }
@@ -324,7 +324,7 @@ document.addEventListener('keydown', function(e) {
                 currentIndex = focusableElements.indexOf(document.getElementById('regBtn'));
                 focusableElements[currentIndex].focus();
             } else if(focusableElements[currentIndex].id === "tgBtn") {
-                // إصلاح الحركة المعكوسة: السهم اليمين ينقلك من التليجرام (يسار) إلى الواتساب (يمين)
+                // إصلاح مشكلة الاتجاه المعكوس: السهم اليمين يتنقل من التليجرام (يسار) إلى الواتساب (يمين)
                 currentIndex = focusableElements.indexOf(document.getElementById('waBtn'));
                 focusableElements[currentIndex].focus();
             }
@@ -332,7 +332,7 @@ document.addEventListener('keydown', function(e) {
             break;
 
         case 13: // زر OK / Enter
-            // ترك حقول الإدخال تفتح الكيبورد الافتراضي للتلفاز أو الهاتف فوراً عند الضغط على OK دون اعتراض
+            // يفتح كيبورد التلفاز أو الهاتف بشكل أصلي تماماً عند الوقوف والضغط على حقول الإدخال
             if (document.activeElement.tagName === 'INPUT') {
                 document.activeElement.focus();
             } else {
@@ -341,13 +341,13 @@ document.addEventListener('keydown', function(e) {
             }
             break;
 
-        case 4:   // زر الرجوع في بعض شاشات التلفاز الذكية
+        case 4:   // زر الرجوع لشاشات التلفاز الذكية
         case 27:  // زر Escape من الكيبورد
             if (document.activeElement.tagName === 'INPUT') {
-                document.activeElement.blur(); // الخروج من الحقل لإخفاء الكيبورد بشكل طبيعي بزر الرجوع
+                document.activeElement.blur(); // الخروج من حقل الإدخال وإخفاء الكيبورد بشكل طبيعي
                 e.preventDefault();
             } else if(window.Android) {
-                window.Android.closeWindow(); // الخروج عبر كلاس الأندرويد
+                window.Android.closeWindow(); // الخروج عبر كلاس الأندرويد الأصلي الخاص بك
                 e.preventDefault();
             }
             break;
