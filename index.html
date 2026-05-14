@@ -280,47 +280,88 @@ function processLogin(user, pass, isAuto) {
 // نظام التحكم بالريموت (TV Navigation System)
 // ==========================================
 let focusableElements = [];
+let contactIcons = [];
 let currentIndex = 0;
+let onContactIcons = false;
 
 function updateFocusableElements() {
+    // الحقول والأزرار
     focusableElements = Array.from(document.querySelectorAll('.tv-focusable')).filter(el => {
         return window.getComputedStyle(el).display !== 'none' && window.getComputedStyle(el.parentElement).display !== 'none';
     });
+    // أيقونات الاتصال
+    contactIcons = Array.from(document.querySelectorAll('.contact-icons a'));
+    
     if(focusableElements.length > 0) {
         currentIndex = 0;
+        onContactIcons = false;
         focusableElements[currentIndex].focus();
     }
 }
 
 document.addEventListener('keydown', function(e) {
-    if (focusableElements.length === 0) return;
+    if(onContactIcons) {
+        // التنقل بين أيقونات الاتصال
+        switch(e.keyCode){
+            case 37: // يسار
+                currentIndex = (currentIndex > 0) ? currentIndex - 1 : contactIcons.length - 1;
+                contactIcons[currentIndex].focus();
+                e.preventDefault();
+                break;
+            case 39: // يمين
+                currentIndex = (currentIndex < contactIcons.length - 1) ? currentIndex + 1 : 0;
+                contactIcons[currentIndex].focus();
+                e.preventDefault();
+                break;
+            case 40: // تحت -> العودة للحقول
+                onContactIcons = false;
+                currentIndex = 0;
+                focusableElements[currentIndex].focus();
+                e.preventDefault();
+                break;
+            case 13: // Enter
+                contactIcons[currentIndex].click();
+                e.preventDefault();
+                break;
+        }
+        return;
+    }
+
+    if(focusableElements.length === 0) return;
 
     switch(e.keyCode) {
         case 38: // فوق
-            if (currentIndex > 0) currentIndex--;
-            focusableElements[currentIndex].focus();
+            if(currentIndex === 0 && contactIcons.length > 0){
+                // الصعود إلى أيقونات الاتصال
+                onContactIcons = true;
+                currentIndex = 0;
+                contactIcons[currentIndex].focus();
+                e.preventDefault();
+                break;
+            }
+            if (currentIndex > 0) { currentIndex--; focusableElements[currentIndex].focus(); }
             e.preventDefault();
             break;
         case 40: // تحت
-            if (currentIndex < focusableElements.length - 1) currentIndex++;
-            focusableElements[currentIndex].focus();
+            if (currentIndex < focusableElements.length - 1) { currentIndex++; focusableElements[currentIndex].focus(); }
             e.preventDefault();
             break;
         case 37: // يسار
-            if (currentIndex > 0) currentIndex--;
-            focusableElements[currentIndex].focus();
+            if(focusableElements[currentIndex].id === "regBtn" && document.getElementById('logBtn').style.display !== 'none') {
+                currentIndex = focusableElements.indexOf(document.getElementById('logBtn'));
+                focusableElements[currentIndex].focus();
+            }
             e.preventDefault();
             break;
         case 39: // يمين
-            if (currentIndex < focusableElements.length - 1) currentIndex++;
-            focusableElements[currentIndex].focus();
+            if(focusableElements[currentIndex].id === "logBtn") {
+                currentIndex = focusableElements.indexOf(document.getElementById('regBtn'));
+                focusableElements[currentIndex].focus();
+            }
             e.preventDefault();
             break;
         case 13: // Enter
-            if (document.activeElement.tagName !== 'INPUT') {
-                document.activeElement.click();
-                e.preventDefault();
-            }
+            if (document.activeElement.tagName !== 'INPUT') { document.activeElement.click(); e.preventDefault(); }
             break;
         case 4: case 27: 
             if(window.Android) { window.Android.closeWindow(); e.preventDefault(); }
