@@ -284,8 +284,8 @@ let contactIcons = [];
 let currentIndex = 0;
 let onContactIcons = false;
 
-// متغير لمنع فتح الكيبورد تلقائياً أثناء التنقل العادي
-let isKeyboardActive = false;
+// متغير لمراقبة حالة فتح الكيبورد
+let isKeyboardOpen = false;
 
 function updateFocusableElements() {
     // الحقول والأزرار
@@ -293,14 +293,14 @@ function updateFocusableElements() {
         return window.getComputedStyle(el).display !== 'none' && window.getComputedStyle(el.parentElement).display !== 'none';
     });
 
-    // تهيئة الحقول لمنع الكيبورد الافتراضي من الظهور أثناء التمرير
+    // تهيئة حقول الإدخال بشكل يمنع النظام من التعرف عليها كحقول نصية نشطة أثناء التنقل
     focusableElements.forEach(el => {
         if (el.tagName === 'INPUT') {
-            el.setAttribute('inputmode', 'none'); // يمنع الكيبورد في المتصفحات الحديثة والشاشات
+            el.setAttribute('inputmode', 'none'); // منع كيبورد الموبايل والشاشات الحديثة
             
-            // منع ظهور الكيبورد عند الضغط باللمس أو الماوس إلا إذا كان الكيبورد مفعلاً برمجياً
-            el.addEventListener('mousedown', function(e) { if(!isKeyboardActive) e.preventDefault(); });
-            el.addEventListener('touchstart', function(e) { if(!isKeyboardActive) e.preventDefault(); });
+            // إلغاء أحداث اللمس والضغط العشوائي لكي لا يظهر الكيبورد إلا بطلبنا
+            el.addEventListener('mousedown', function(e) { if(!isKeyboardOpen) { e.preventDefault(); el.focus(); } });
+            el.addEventListener('touchstart', function(e) { if(!isKeyboardOpen) { e.preventDefault(); el.focus(); } });
         }
     });
 
@@ -315,6 +315,38 @@ function updateFocusableElements() {
 }
 
 document.addEventListener('keydown', function(e) {
+    // إذا كان الكيبورد مفتوحاً وضغط المستخدم زر رجوع (4 أو 27)، نغلقه فوراً ونستأنف التنقل
+    if (isKeyboardOpen && (e.keyCode === 4 || e.keyCode === 27)) {
+        let activeEl = document.activeElement;
+        if (activeEl && activeEl.tagName === 'INPUT') {
+            isKeyboardOpen = false;
+            activeEl.setAttribute('inputmode', 'none'); // إعادة حظر الكيبورد
+            activeEl.blur(); // إجبار المتصفح على إخفاء الكيبورد
+            
+            // إعادة التركيز للحقل برمجياً بعد ثوانٍ بسيطة ليظل المستخدم واقفا عليه ويكمل تنقله
+            setTimeout(() => {
+                activeEl.focus();
+            }, 100);
+            
+            e.preventDefault();
+            return; // إنهاء الحدث هنا لكي لا يغلق التطبيق بالكامل
+        }
+    }
+
+    // إذا كان الكيبورد مفتوحاً والمستخدم يكتب داخل الحقل، نترك الأزرار تعمل للكتابة ولا نتدخل في التنقل
+    if (isKeyboardOpen && document.activeElement.tagName === 'INPUT') {
+        // إذا ضغط انتر داخل الحقل وهو مفتوح، نعتبره إنهاء للكتابة ونغلق الكيبورد
+        if (e.keyCode === 13) {
+            isKeyboardOpen = false;
+            document.activeElement.setAttribute('inputmode', 'none');
+            document.activeElement.blur();
+            let savedEl = focusableElements[currentIndex];
+            setTimeout(() => { savedEl.focus(); }, 100);
+            e.preventDefault();
+        }
+        return; 
+    }
+
     if(onContactIcons) {
         // التنقل بين أيقونات الاتصال
         switch(e.keyCode){
@@ -343,22 +375,6 @@ document.addEventListener('keydown', function(e) {
     }
 
     if(focusableElements.length === 0) return;
-
-    // معالجة زر الباك (4 أو 27) عندما يكون الكيبورد مفتوحاً لإغلاقه وإعادة تفعيل التنقل السلس
-    if ((e.keyCode === 4 || e.keyCode === 27) && document.activeElement.tagName === 'INPUT' && isKeyboardActive) {
-        let currentInput = document.activeElement;
-        isKeyboardActive = false;
-        currentInput.setAttribute('inputmode', 'none'); // إعادة كبح الكيبورد
-        currentInput.blur(); // كسر التركيز الحالي لتنظيف نظام أندرويد TV
-        
-        // إعادة التركيز بعد 50 ملي ثانية لضمان استقرار المتصفح واستمرار التنقل بالريموت
-        setTimeout(() => {
-            currentInput.focus();
-        }, 50);
-        
-        e.preventDefault();
-        return; 
-    }
 
     switch(e.keyCode) {
         case 38: // فوق
@@ -393,12 +409,15 @@ document.addEventListener('keydown', function(e) {
             break;
         case 13: // Enter
             if (document.activeElement.tagName === 'INPUT') {
-                if (!isKeyboardActive) {
-                    isKeyboardActive = true;
-                    document.activeElement.removeAttribute('inputmode'); // السماح بفتح الكيبورد
-                    document.activeElement.blur(); // إعادة تدوير التركيز لإجبار النظام على قراءة الإعداد الجديد
-                    document.activeElement.focus(); 
-                }
+                // تفعيل الكيبورد فقط عند ضغط زر Enter بشكل صريح
+                isKeyboardOpen = true;
+                document.activeElement.removeAttribute('inputmode'); // السماح بالنظام لإظهار الكيبورد
+                
+                // إعادة تنشيط الحقل برمجياً لإجبار نظام أندرويد/الشاشة على قراءة الوضع الجديد وفتح الكيبورد فوراً
+                let currentInput = document.activeElement;
+                currentInput.blur();
+                currentInput.focus();
+                e.preventDefault();
             } else {
                 document.activeElement.click();
                 e.preventDefault();
