@@ -134,15 +134,15 @@
     <div id="statusMsg"></div>
 
     <!-- أيقونات الاتصال بالصور -->
-    <!-- أيقونات الاتصال بالصور -->
+
 <div class="contact-icons">
-    <a href="https://wa.me/1234567890" target="_blank" title="واتساب" class="tv-focusable">
+    <a href="javascript:void(0);" onclick="openExternalLink('https://wa.me/1234567890'); return false;" title="واتساب" class="tv-focusable">
         <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="واتساب">
     </a>
-    <a href="https://t.me/username" target="_blank" title="تيليجرام" class="tv-focusable">
+    <a href="javascript:void(0);" onclick="openExternalLink('t.me'); return false;" title="تيليجرام" class="tv-focusable">
         <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="تيليجرام">
     </a>
-    <a href="tel:1234567890" title="اتصال" class="tv-focusable">
+    <a href="javascript:void(0);" onclick="openExternalLink('tel:1234567890'); return false;" title="اتصال" class="tv-focusable">
         <img src="https://cdn-icons-png.flaticon.com/512/5585/5585856.png" alt="اتصال">
     </a>
 </div>
@@ -368,6 +368,13 @@ document.addEventListener('keydown', function(e) {
             break;
     }
 });
+function openExternalLink(url) {
+    if (window.Android && window.Android.openIntent) {
+        window.Android.openIntent(url);
+    } else {
+        window.open(url, '_blank');
+    }
+}
 </script>
 </body>
 </html>
