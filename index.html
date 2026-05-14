@@ -326,56 +326,6 @@ document.addEventListener('keydown', function(e) {
         }
         return;
     }
-// ==========================================
-// نظام التحكم بالريموت (TV Navigation System)
-// ==========================================
-let focusableElements = [];
-let contactIcons = [];
-let currentIndex = 0;
-let onContactIcons = false;
-
-function updateFocusableElements() {
-    // الحقول والأزرار
-    focusableElements = Array.from(document.querySelectorAll('.tv-focusable')).filter(el => {
-        return window.getComputedStyle(el).display !== 'none' && window.getComputedStyle(el.parentElement).display !== 'none';
-    });
-    // أيقونات الاتصال
-    contactIcons = Array.from(document.querySelectorAll('.contact-icons a'));
-    
-    if(focusableElements.length > 0) {
-        currentIndex = 0;
-        onContactIcons = false;
-        focusableElements[currentIndex].focus();
-    }
-}
-
-document.addEventListener('keydown', function(e) {
-    if(onContactIcons) {
-        // التنقل بين أيقونات الاتصال
-        switch(e.keyCode){
-            case 37: // يسار
-                currentIndex = (currentIndex > 0) ? currentIndex - 1 : contactIcons.length - 1;
-                contactIcons[currentIndex].focus();
-                e.preventDefault();
-                break;
-            case 39: // يمين
-                currentIndex = (currentIndex < contactIcons.length - 1) ? currentIndex + 1 : 0;
-                contactIcons[currentIndex].focus();
-                e.preventDefault();
-                break;
-            case 40: // تحت -> العودة للحقول
-                onContactIcons = false;
-                currentIndex = 0;
-                focusableElements[currentIndex].focus();
-                e.preventDefault();
-                break;
-            case 13: // Enter
-                contactIcons[currentIndex].click();
-                e.preventDefault();
-                break;
-        }
-        return;
-    }
 
     if(focusableElements.length === 0) return;
 
