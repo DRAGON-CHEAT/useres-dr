@@ -289,6 +289,14 @@ function updateFocusableElements() {
     focusableElements = Array.from(document.querySelectorAll('.tv-focusable')).filter(el => {
         return window.getComputedStyle(el).display !== 'none' && window.getComputedStyle(el.parentElement).display !== 'none';
     });
+    
+    // جعل جميع حقول الإدخال للقراءة فقط افتراضياً لمنع ظهور الكيبورد عند المرور
+    focusableElements.forEach(el => {
+        if (el.tagName === 'INPUT') {
+            el.readOnly = true;
+        }
+    });
+
     // أيقونات الاتصال
     contactIcons = Array.from(document.querySelectorAll('.contact-icons a'));
     
@@ -329,6 +337,16 @@ document.addEventListener('keydown', function(e) {
 
     if(focusableElements.length === 0) return;
 
+    // معالجة زر الباك (4 أو 27) عندما يكون الكيبورد مفتوحاً والحقل نشطاً ومعدلاً
+    if ((e.keyCode === 4 || e.keyCode === 27) && document.activeElement.tagName === 'INPUT' && !document.activeElement.readOnly) {
+        let currentInput = document.activeElement;
+        currentInput.readOnly = true; // إعادة تفعيل القراءة فقط لإغلاق الكيبورد
+        currentInput.blur(); // إزالة التركيز المؤقت لإخفاء الكيبورد فوراً
+        currentInput.focus(); // إعادة التركيز للحفاظ على مكان المؤشر في التنقل
+        e.preventDefault();
+        return; // التوقف هنا لمنع إغلاق النافذة (window.Android.closeWindow)
+    }
+
     switch(e.keyCode) {
         case 38: // فوق
             if(currentIndex === 0 && contactIcons.length > 0){
@@ -361,7 +379,14 @@ document.addEventListener('keydown', function(e) {
             e.preventDefault();
             break;
         case 13: // Enter
-            if (document.activeElement.tagName !== 'INPUT') { document.activeElement.click(); e.preventDefault(); }
+            if (document.activeElement.tagName === 'INPUT') {
+                if (document.activeElement.readOnly) {
+                    document.activeElement.readOnly = false; // إلغاء القراءة فقط لفتح الكيبورد عند ضغط انتر
+                }
+            } else {
+                document.activeElement.click();
+                e.preventDefault();
+            }
             break;
         case 4: case 27: 
             if(window.Android) { window.Android.closeWindow(); e.preventDefault(); }
