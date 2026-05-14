@@ -384,16 +384,16 @@ document.addEventListener('keydown', function(e) {
 });
 function openExternalLink(e, url) {
     if (e) {
-        e.preventDefault(); // منع فتح الويب فيو فوراً
-        e.stopPropagation(); // إيقاف انتشار الحدث لأي كود آخر
+        e.preventDefault();
+        e.stopPropagation();
     }
-    
     if (window.Android && window.Android.openIntent) {
         window.Android.openIntent(url);
     } else {
         window.open(url, '_blank');
     }
 }
+
 </script>
 </body>
 </html>
