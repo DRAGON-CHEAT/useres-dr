@@ -1,91 +1,116 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>Dragon TV Services</title>
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <meta charset="UTF-8">
+    <title>Dragon TV Services</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
-<style>
-body { background-color: #000; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
+    <style>
+        body { 
+            background-color: #000; 
+            color: white; 
+            font-family: sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            overflow: hidden; 
+        }
 
-#loader {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: #000; display: flex; flex-direction: column;
-    justify-content: center; align-items: center; z-index: 9999;
-}
-.spinner {
-    width: 50px; height: 50px; border: 5px solid #222;
-    border-top: 5px solid #ff0000; border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 9999;
+        }
+        .spinner {
+            width: 50px; height: 50px; border: 5px solid #222;
+            border-top: 5px solid #ff0000; border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-.dragon-card { 
-    display: none; 
-    background: #111; 
-    padding: 40px 20px 60px 20px; 
-    border-radius: 15px; 
-    border-top: 4px solid #ff0000; 
-    width: 90%; 
-    max-width: 450px; 
-    text-align: center; 
-    box-shadow: 0 0 25px rgba(255,0,0,0.3); 
-    position: relative;
-}
+        .dragon-card { 
+            display: none; 
+            background: rgba(17,17,17,0.95); 
+            padding: 30px; 
+            border-radius: 15px; 
+            border-top: 4px solid #ff0000; 
+            width: 90%; 
+            max-width: 400px; 
+            text-align: center; 
+            box-shadow: 0 0 25px rgba(255,0,0,0.3); 
+            position: relative;
+        }
+        
+        h1 { 
+            color: #ff0000; 
+            margin-bottom: 20px; 
+            text-shadow: 0 0 10px #ff0000; 
+            font-size: 2em; 
+        }
 
-h1 { color: #ff0000; margin-bottom: 25px; text-shadow: 0 0 10px #ff0000; font-size: 2em; }
+        input { 
+            width: 100%; 
+            padding: 14px; 
+            margin-bottom: 10px; 
+            background: #222; 
+            border: 1px solid #444; 
+            color: white; 
+            border-radius: 10px; 
+            box-sizing: border-box; 
+            text-align: center; 
+            outline: none; 
+            font-size: 1em;
+        }
 
-input { 
-    width: 100%; 
-    padding: 16px; 
-    margin-bottom: 12px; 
-    background: #222; 
-    border: 1px solid #444; 
-    color: white; 
-    border-radius: 10px; 
-    box-sizing: border-box; 
-    text-align: center; 
-    outline: none; 
-    font-size: 1.1em;
-}
+        .btns { display: flex; gap: 10px; margin-bottom: 10px; }
+        button { flex: 1; padding: 14px; cursor: pointer; font-weight: bold; border-radius: 10px; border: none; transition: 0.3s; outline: none; font-size: 1em; }
 
-.btns { display: flex; gap: 10px; margin-bottom: 12px; }
-button { flex: 1; padding: 16px; cursor: pointer; font-weight: bold; border-radius: 10px; border: none; transition: 0.3s; outline: none; font-size: 1.1em; }
+        .btn-reg { background: #353570; color: white; }
+        .btn-log { background: #3a7035; color: white; }
+        .btn-out { background: #b00; color: white; display: none; width: 100%; outline: none; }
 
-.btn-reg { background: #353570; color: white; }
-.btn-log { background: #3a7035; color: white; }
-.btn-out { background: #b00; color: white; display: none; width: 100%; outline: none; }
+        #statusMsg { margin-top: 15px; font-size: 14px; min-height: 20px; }
 
-#statusMsg { margin-top: 20px; font-size: 15px; min-height: 20px; }
+        /* أيقونات الاتصال مصغرة في أعلى يسار */
+        .contact-icons {
+            position: absolute; top: 10px; left: 10px;
+            display: flex; gap: 10px;
+        }
+        .contact-icons a {
+            display: block;
+            width: 25px; height: 25px;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: 0.3s;
+        }
+        .contact-icons a img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .contact-icons a:focus { 
+            outline: 2px solid #ff0000; 
+            box-shadow: 0 0 10px #ff0000;
+            transform: scale(1.05);
+        }
 
-/* أيقونات واتساب وتيليجرام فقط، أقصى يسار */
-.contact-icons {
-    display: flex; justify-content: flex-start; gap: 8px; 
-    position: absolute; top: 10px; left: 10px;
-}
-.contact-icons a {
-    display: flex; align-items: center; justify-content: center;
-    width: 28px; height: 28px; border-radius: 50%;
-    background-size: cover; background-position: center;
-    transition: 0.3s; text-decoration: none;
-    font-size: 1.2em; color: white;
-}
+        .contact-info {
+            display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px; font-size: 1em;
+        }
 
-/* ستايل التركيز الخاص بالريموت */
-.tv-focusable:focus {
-    border: 2px solid #ff0000 !important;
-    box-shadow: 0 0 18px #ff0000 !important;
-    transform: scale(1.03);
-}
+        .tv-focusable:focus {
+            border: 2px solid #ff0000 !important;
+            box-shadow: 0 0 18px #ff0000 !important;
+            transform: scale(1.03);
+        }
 
-/* responsive adjustments */
-@media(max-width:600px) {
-    .dragon-card { padding: 30px; width: 95%; }
-    input, button { font-size: 1em; padding: 14px; }
-    .contact-icons a { width: 24px; height: 24px; font-size: 1em; }
-}
-</style>
+        @media(max-width:600px) {
+            .dragon-card { padding: 20px; width: 95%; }
+            input, button { font-size: 0.95em; padding: 12px; }
+            .contact-icons a { width: 30px; height: 30px; }
+        }
+    </style>
 </head>
 <body>
 
@@ -97,8 +122,8 @@ button { flex: 1; padding: 16px; cursor: pointer; font-weight: bold; border-radi
 <div class="dragon-card" id="mainCard">
     <h1>DraGon TV</h1>
     
-    <input type="text" id="userField" class="tv-focusable" placeholder="الاسم الثنائي والمواليد" readonly>
-    <input type="password" id="passField" class="tv-focusable" placeholder="كلمة المرور" readonly>
+    <input type="text" id="userField" class="tv-focusable" placeholder="الاسم الثنائي والمواليد">
+    <input type="password" id="passField" class="tv-focusable" placeholder="كلمة المرور">
     
     <div id="mainBtns" class="btns">
         <button id="regBtn" class="btn-reg tv-focusable" onclick="register()">ارسال الطلب</button>
@@ -108,10 +133,17 @@ button { flex: 1; padding: 16px; cursor: pointer; font-weight: bold; border-radi
     
     <div id="statusMsg"></div>
 
-    <!-- أيقونات واتساب وتيليجرام فقط -->
+    <!-- أيقونات الاتصال بالصور -->
     <div class="contact-icons">
-        <a href="https://wa.me/1234567890" target="_blank" title="واتساب">💬</a>
-        <a href="https://t.me/username" target="_blank" title="تيليجرام">📨</a>
+        <a href="https://wa.me/1234567890" target="_blank" title="واتساب" class="tv-focusable">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="واتساب">
+        </a>
+        <a href="https://t.me/username" target="_blank" title="تيليجرام" class="tv-focusable">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="تيليجرام">
+        </a>
+        <a href="tel:1234567890" title="اتصال" class="tv-focusable">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/3/3e/Phone_icon.svg" alt="اتصال">
+        </a>
     </div>
 </div>
 
@@ -121,10 +153,11 @@ const firebaseConfig = {
   authDomain: "drag-9user.firebaseapp.com",
   databaseURL: "https://drag-9user-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "drag-9user",
-  storageBucket: "drag-9user.firebasedatabase.app",
+  storageBucket: "drag-9user.firebasestorage.app",
   messagingSenderId: "716759119906",
   appId: "1:716759119906:web:4b522ed58dba7bf623727b"
 };
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
@@ -165,8 +198,82 @@ window.clearDeviceSession = function() {
 };
 
 window.onload = function() {
-    showUI();
+    const urlParams = new URLSearchParams(window.location.search);
+    const isLogoutMode = urlParams.get('action') === 'logout';
+    const savedUser = localStorage.getItem("user");
+    const savedPass = localStorage.getItem("pass");
+
+    if(savedUser) { document.getElementById('userField').value = savedUser; }
+
+    if (isLogoutMode && savedUser) {
+        showUI();
+        document.getElementById('userField').readOnly = true;
+        document.getElementById('passField').style.display = "none";
+        document.getElementById('mainBtns').style.display = "none";
+        document.getElementById('outBtn').style.display = "block";
+        updateFocusableElements();
+    } else if(savedUser && savedPass) {
+        processLogin(savedUser, savedPass, true);
+    } else {
+        showUI();
+    }
 };
+
+function register() {
+    const user = document.getElementById('userField').value.trim();
+    const msg = document.getElementById('statusMsg');
+    if(!user) { msg.style.color = "yellow"; msg.innerText = "⚠ يرجى إدخال أسم المستخدم أولاً"; return; }
+    if(user.length < 8) { msg.style.color = "yellow"; msg.innerText = "⚠  الاسم يجب أن يكون ثنائي مع مواليد"; return; }
+    
+    db.ref("users/" + user).once("value").then((snap) => {
+        if(snap.exists()) { 
+            msg.style.color = "red"; msg.innerText = "⚠ هذا المستخدم موجود بالفعل"; 
+        } else {
+            db.ref("users/" + user).set({ username: user, currentDevice: deviceId, expirydate: "", password: "" }).then(() => {
+                msg.style.color = "yellow"; msg.innerText = "تم إرسال طلبك بنجاح يرجى مراسلتنا";
+            });
+        }
+    });
+}
+
+function login() {
+    const user = document.getElementById('userField').value.trim();
+    const pass = document.getElementById('passField').value.trim();
+    const msg = document.getElementById('statusMsg');
+    if(!user) { msg.style.color = "yellow"; msg.innerText = "⚠ يرجى إدخال اسم المستخدم"; return; }
+    if(!pass) { msg.style.color = "yellow"; msg.innerText = "⚠ يرجى إدخال كلمة المرور"; return; }
+    processLogin(user, pass, false);
+}
+
+function processLogin(user, pass, isAuto) {
+    const msg = document.getElementById('statusMsg');
+    db.ref("users/" + user).once("value").then((snap) => {
+        if(snap.exists()){
+            const data = snap.val();
+            if(data.expirydate && new Date(data.expirydate) < new Date()) {
+                showUI();
+                msg.style.color = "yellow"; msg.innerText = "⚠ انتهى اشتراكك"; return;
+            }
+            if (!data.currentDevice || data.currentDevice === "") {
+                db.ref("users/" + user + "/currentDevice").set(deviceId);
+            } else if (data.currentDevice !== deviceId) {
+                showUI();
+                msg.style.color = "red"; msg.innerText = "⚠ حسابك مرتبط بجهاز آخر"; return;
+            }
+            if(data.password && data.password.toString() === pass) {
+                localStorage.setItem("user", user);
+                localStorage.setItem("pass", pass);
+                if(window.Android) { window.Android.closeWindow(); }
+            } else {
+                showUI(); 
+                if(!isAuto) { msg.style.color = "yellow"; msg.innerText = "الباسورد خطأ"; }
+            }
+        } else {
+            showUI(); 
+            if(!isAuto) { msg.style.color = "yellow"; msg.innerText = "المستخدم غير موجود"; }
+        }
+    }).catch(() => showUI());
+}
 
 // ==========================================
 // نظام التحكم بالريموت (TV Navigation System)
@@ -189,28 +296,35 @@ document.addEventListener('keydown', function(e) {
 
     switch(e.keyCode) {
         case 38: // فوق
-            if(currentIndex > 0) currentIndex--;
+            if (currentIndex > 0) currentIndex--;
+            focusableElements[currentIndex].focus();
+            e.preventDefault();
             break;
         case 40: // تحت
-            if(currentIndex < focusableElements.length - 1) currentIndex++;
+            if (currentIndex < focusableElements.length - 1) currentIndex++;
+            focusableElements[currentIndex].focus();
+            e.preventDefault();
             break;
         case 37: // يسار
-            break; // يمكن تعديل حسب اتجاه التنقل
+            if (currentIndex > 0) currentIndex--;
+            focusableElements[currentIndex].focus();
+            e.preventDefault();
+            break;
         case 39: // يمين
+            if (currentIndex < focusableElements.length - 1) currentIndex++;
+            focusableElements[currentIndex].focus();
+            e.preventDefault();
             break;
         case 13: // Enter
-            const el = focusableElements[currentIndex];
-            if(el.tagName === 'INPUT') el.readOnly = false; 
-            else el.click();
+            if (document.activeElement.tagName !== 'INPUT') {
+                document.activeElement.click();
+                e.preventDefault();
+            }
             break;
-        case 4: case 27: // Back
-            const active = focusableElements[currentIndex];
-            if(active.tagName === 'INPUT') active.readOnly = true;
-            else if(window.Android) { window.Android.closeWindow(); }
+        case 4: case 27: 
+            if(window.Android) { window.Android.closeWindow(); e.preventDefault(); }
             break;
     }
-    focusableElements[currentIndex].focus();
-    e.preventDefault();
 });
 </script>
 </body>
