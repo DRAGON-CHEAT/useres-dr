@@ -54,7 +54,7 @@
         input { 
             width: 100%; 
             padding: 14px; 
-            margin-bottom: 10px; 
+            margin-bottom: 12px; 
             background: #222; 
             border: 1px solid #444; 
             color: white; 
@@ -252,13 +252,13 @@ function processLogin(user, pass, isAuto) {
         if(snap.exists()){
             const data = snap.val();
             if(data.expirydate && new Date(data.expirydate) < new Date()) {
-                showUI();
+                
                 msg.style.color = "yellow"; msg.innerText = "⚠ انتهى اشتراكك"; return;
             }
             if (!data.currentDevice || data.currentDevice === "") {
                 db.ref("users/" + user + "/currentDevice").set(deviceId);
             } else if (data.currentDevice !== deviceId) {
-                showUI();
+                
                 msg.style.color = "red"; msg.innerText = "⚠ حسابك مرتبط بجهاز آخر"; return;
             }
             if(data.password && data.password.toString() === pass) {
@@ -266,11 +266,11 @@ function processLogin(user, pass, isAuto) {
                 localStorage.setItem("pass", pass);
                 if(window.Android) { window.Android.closeWindow(); }
             } else {
-                showUI(); 
+                 
                 if(!isAuto) { msg.style.color = "yellow"; msg.innerText = "الباسورد خطأ"; }
             }
         } else {
-            showUI(); 
+            
             if(!isAuto) { msg.style.color = "yellow"; msg.innerText = "المستخدم غير موجود"; }
         }
     }).catch(() => showUI());
