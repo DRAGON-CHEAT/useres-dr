@@ -820,6 +820,105 @@ document.addEventListener('keydown', function(e) {
                 currentIndex = 0;
                 contactIcons[currentIndex].focus();
                 e.preventDefault();
+// ==========================================
+// نظام التحكم بالريموت (TV Navigation System)
+// ==========================================
+let focusableElements = [];
+let contactIcons = [];
+let currentIndex = 0;
+let onContactIcons = false;
+
+// متغير إضافي فقط لمراقبة حالة فتح الكيبورد
+let isKeyboardActive = false;
+
+function updateFocusableElements() {
+    // الحقول والأزرار
+    focusableElements = Array.from(document.querySelectorAll('.tv-focusable')).filter(el => {
+        return window.getComputedStyle(el).display !== 'none' && window.getComputedStyle(el.parentElement).display !== 'none';
+    });
+
+    // إضافة منطق عزل الكيبورد عن التنقل دون تغيير الدالة:
+    focusableElements.forEach(el => {
+        if (el.tagName === 'INPUT') {
+            el.readOnly = true; // منع ظهور الكيبورد تلقائياً أثناء التنقل بالريموت
+
+            // عند لمس الحقل في المبايل يتم السماح بفتح الكيبورد فوراً
+            el.addEventListener('touchstart', function() {
+                isKeyboardActive = true;
+                el.readOnly = false;
+            });
+            el.addEventListener('mousedown', function() {
+                isKeyboardActive = true;
+                el.readOnly = false;
+            });
+        }
+    });
+
+    // أيقونات الاتصال
+    contactIcons = Array.from(document.querySelectorAll('.contact-icons a'));
+    
+    if(focusableElements.length > 0) {
+        currentIndex = 0;
+        onContactIcons = false;
+        focusableElements[currentIndex].focus();
+    }
+}
+
+document.addEventListener('keydown', function(e) {
+    // منطق زر الباك (4 أو 27) لإغلاق الكيبورد وإعادة الحقل لوضع التنقل السلس دون إغلاق النافذة
+    if (isKeyboardActive && (e.keyCode === 4 || e.keyCode === 27)) {
+        let activeInput = document.activeElement;
+        if (activeInput && activeInput.tagName === 'INPUT') {
+            isKeyboardActive = false;
+            activeInput.readOnly = true; // إعادة تفعيل وضع التنقل
+            activeInput.blur(); // إغلاق كيبورد النظام فوراً
+            
+            setTimeout(() => {
+                activeInput.focus(); // إبقاء التركيز على نفس الحقل لمتابعة التنقل بالريموت
+            }, 50);
+            
+            e.preventDefault();
+            return; // إنهاء الحدث هنا لكي لا يتأثر منطق الباك الأصلي في الأسفل
+        }
+    }
+
+    if(onContactIcons) {
+        // التنقل بين أيقونات الاتصال
+        switch(e.keyCode){
+            case 37: // يسار
+                currentIndex = (currentIndex > 0) ? currentIndex - 1 : contactIcons.length - 1;
+                contactIcons[currentIndex].focus();
+                e.preventDefault();
+                break;
+            case 39: // يمين
+                currentIndex = (currentIndex < contactIcons.length - 1) ? currentIndex + 1 : 0;
+                contactIcons[currentIndex].focus();
+                e.preventDefault();
+                break;
+            case 40: // تحت -> العودة للحقول
+                onContactIcons = false;
+                currentIndex = 0;
+                focusableElements[currentIndex].focus();
+                e.preventDefault();
+                break;
+            case 13: // Enter
+                contactIcons[currentIndex].click();
+                e.preventDefault();
+                break;
+        }
+        return;
+    }
+
+    if(focusableElements.length === 0) return;
+
+    switch(e.keyCode) {
+        case 38: // فوق
+            if(currentIndex === 0 && contactIcons.length > 0){
+                // الصعود إلى أيقونات الاتصال
+                onContactIcons = true;
+                currentIndex = 0;
+                contactIcons[currentIndex].focus();
+                e.preventDefault();
                 break;
             }
             if (currentIndex > 0) { currentIndex--; focusableElements[currentIndex].focus(); }
@@ -844,31 +943,26 @@ document.addEventListener('keydown', function(e) {
             e.preventDefault();
             break;
         case 13: // Enter
+            // فتح الكيبورد بالتلفاز عند ضغط Enter بشكل صريح فوق الحقل
             if (document.activeElement.tagName === 'INPUT') {
-                // فتح الكيبورد بشكل فوري عند ضغط انتر فقط
-                isInputActive = true;
-                document.activeElement.readOnly = false;
-                
-                // إعادة قراءة الحقل بشكل فوري لضمان ظهور الكيبورد على شاشات التلفاز وأندرويد
-                let targetInput = document.activeElement;
-                targetInput.blur();
-                targetInput.focus();
-                e.preventDefault();
+                if (!isKeyboardActive) {
+                    isKeyboardActive = true;
+                    document.activeElement.readOnly = false;
+                    
+                    let targetInput = document.activeElement;
+                    targetInput.blur();
+                    targetInput.focus(); // إجبار التلفاز على قراءة التغيير وفتح الكيبورد
+                    e.preventDefault();
+                }
             } else {
-                document.activeElement.click();
-                e.preventDefault();
+                document.activeElement.click(); 
+                e.preventDefault(); 
             }
             break;
         case 4: case 27: 
             if(window.Android) { window.Android.closeWindow(); e.preventDefault(); }
             break;
     }
-});
-
-// لضمان التهيئة الصحيحة عند تحميل الصفحة
-window.addEventListener('DOMContentLoaded', () => {
-    // تذكر استدعاء دالة updateFocusableElements() عندما تفتح الكارد بعد انتهاء اللودر
-    setTimeout(updateFocusableElements, 500); 
 });
 </script>
 </body>
