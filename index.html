@@ -7,11 +7,22 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
     <style>
-        body { background-color: #000; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
-        
+        body { 
+            background: url('background.jpg') no-repeat center center fixed; 
+            background-size: cover; 
+            color: white; 
+            font-family: sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            overflow: hidden; 
+        }
+
         #loader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; display: flex; flex-direction: column;
+            background: rgba(0,0,0,0.9); display: flex; flex-direction: column;
             justify-content: center; align-items: center; z-index: 9999;
         }
         .spinner {
@@ -19,24 +30,106 @@
             border-top: 5px solid #ff0000; border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(3600deg); } }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .dragon-card { display: none; background: #111; padding: 30px; border-radius: 15px; border-top: 4px solid #ff0000; width: 320px; text-align: center; box-shadow: 0 0 20px rgba(255,0,0,0.3); }
+        .dragon-card { 
+            display: none; 
+            background: rgba(17,17,17,0.94); 
+            padding: 30px; 
+            border-radius: 15px; 
+            border-top: 4px solid #ff0000; 
+            width: 90%; 
+            max-width: 400px; 
+            text-align: center; 
+            box-shadow: 0 0 25px rgba(255,0,0,0.3); 
+            position: relative;
+        }
         
-        h1 { color: #ff0000; margin-bottom: 20px; text-shadow: 0 0 10px #ff0000; }
-        input { width: 100%; padding: 12px; margin-bottom: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; text-align: center; outline: none; }
-        .btns { display: flex; gap: 5px; margin-bottom: 10px; }
-        button { flex: 1; padding: 12px; cursor: pointer; font-weight: bold; border-radius: 8px; border: none; transition: 0.3s; outline: none; }
-        .btn-reg { background: #353570; color: white; }
-        .btn-log { background: #3a7035; color: white; }
-        .btn-out { background: #b00; color: white; display: none; width: 100%; outline: none; }
+        h1 { 
+            color: #ff0000; 
+            margin-bottom: 20px; 
+            text-shadow: 0 0 10px #ff0000; 
+            font-size: 2em; 
+        }
+
+        input { 
+            width: 100%; 
+            padding: 14px; 
+            margin-bottom: 12px; 
+            background: #222; 
+            border: 1px solid #444; 
+            color: white; 
+            border-radius: 10px; 
+            box-sizing: border-box; 
+            text-align: center; 
+            outline: none; 
+            font-size: 1em;
+        }
+
+        .btns { display: flex; gap: 10px; margin-bottom: 10px; }
+        button { flex: 1; padding: 14px; cursor: pointer; font-weight: bold; border-radius: 10px; border: none; transition: 0.3s; outline: none; font-size: 1em; }
+
+    .btn-reg { 
+    background: #353570; 
+    color: white; 
+    transition: background-color 0.2s ease; /* يغير اللون فقط برفق بدون حركة */
+}
+    .btn-log { 
+    background: #3a7035; 
+    color: white; 
+    transition: background-color 0.2s ease; /* يغير اللون فقط برفق بدون حركة */
+}
+    .btn-out { 
+    background: #b00; 
+    color: white; 
+    display: none; 
+    width: 100%; 
+    outline: none; 
+    transition: background-color 0.2s ease; 
+}
+
+/* الألوان الجديدة التي تظهر عند التنقل بالريموت (Focus) بدون أي تكبير أو حركة */
+.btn-reg:focus {
+    background: #4a4af0 !important; 
+}
+.btn-log:focus {
+    background: #4fa648 !important; 
+}
+.btn-out:focus {
+    background: #e60000 !important; 
+}
+
         #statusMsg { margin-top: 15px; font-size: 14px; min-height: 20px; }
 
-        /* ستايل التركيز الخاص بريموت التلفاز */
+        /* أيقونات الاتصال مصغرة في أعلى يسار */
+        .contact-icons {
+            position: absolute; top: 10px; left: 10px;
+            display: flex; gap: 10px;
+        }
+        .contact-icons a {
+            display: block;
+            width: 25px; height: 25px;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: 0.3s;
+        }
+        .contact-icons a img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
         .tv-focusable:focus {
             border: 2px solid #ff0000 !important;
-            box-shadow: 0 0 15px #ff0000 !important;
+            box-shadow: 0 0 18px #ff0000 !important;
             transform: scale(1.03);
+        }
+
+        .contact-info {
+            display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px; font-size: 1em;
+        }
+        
+        @media(max-width:600px) {
+            .dragon-card { padding: 20px; width: 95%; }
+            input, button { font-size: 0.95em; padding: 12px; }
+            .contact-icons a { width: 30px; height: 30px; }
         }
     </style>
 </head>
@@ -48,16 +141,46 @@
 </div>
 
 <div class="dragon-card" id="mainCard">
-    <h1>DraGon TV</h1>
-    <!-- إضافة كلاس tv-focusable لجميع العناصر القابلة للتفاعل -->
+    <h1>𝔻ℝ𝔸𝔾𝕆ℕ 𝕋𝕍</h1>
+    
     <input type="text" id="userField" class="tv-focusable" placeholder="الاسم الثنائي والمواليد">
     <input type="password" id="passField" class="tv-focusable" placeholder="كلمة المرور">
+    
     <div id="mainBtns" class="btns">
         <button id="regBtn" class="btn-reg tv-focusable" onclick="register()">ارسال الطلب</button>
         <button id="logBtn" class="btn-log tv-focusable" onclick="login()">تسجيل دخول</button>
     </div>
     <button id="outBtn" class="btn-out tv-focusable" onclick="clearDeviceSession()">تسجيل خروج من الحساب</button>
+    
     <div id="statusMsg"></div>
+
+    <!-- أيقونات الاتصال بالصور -->
+    <!-- أيقونات الاتصال بالصور -->
+<div class="contact-icons">
+    <a href="https://wa.me/1234567890" target="_blank" title="واتساب" class="tv-focusable">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="واتساب">
+    </a>
+    <a href="https://t.me/username" target="_blank" title="تيليجرام" class="tv-focusable">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="تيليجرام">
+    </a>
+    <a href="tel:1234567890" title="اتصال" class="tv-focusable">
+        <img src="https://cdn-icons-png.flaticon.com/512/5585/5585856.png" alt="اتصال">
+    </a>
+</div>
+<!-- أيقونات الاتصال المعدلة للواتساب والتيليجرام والهاتف فقط -->
+<div class="contact-icons">
+    <a href="javascript:void(0);" onclick="openExternalLink(event, 'https://wa.me/7827340861');" title="واتساب" class="tv-focusable">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="واتساب">
+    </a>
+    <a href="javascript:void(0);" onclick="openExternalLink(event, 'https://t.me');" title="تيليجرام" class="tv-focusable">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="تيليجرام">
+    </a>
+    <a href="javascript:void(0);" onclick="openExternalLink(event, 'tel:1234567890');" title="اتصال" class="tv-focusable">
+        <img src="https://cdn-icons-png.flaticon.com/512/5585/5585856.png" alt="اتصال">
+    </a>
+</div>
+
+
 </div>
 
 <script>
@@ -87,7 +210,7 @@ const deviceId = generateRandomID();
 function showUI() {
     document.getElementById('loader').style.display = "none";
     document.getElementById('mainCard').style.display = "block";
-    updateFocusableElements(); // تحديث القائمة بعد عرض الواجهة
+    updateFocusableElements(); 
 }
 
 window.clearDeviceSession = function() {
@@ -116,9 +239,7 @@ window.onload = function() {
     const savedUser = localStorage.getItem("user");
     const savedPass = localStorage.getItem("pass");
 
-    if(savedUser) {
-        document.getElementById('userField').value = savedUser;
-    }
+    if(savedUser) { document.getElementById('userField').value = savedUser; }
 
     if (isLogoutMode && savedUser) {
         showUI();
@@ -172,7 +293,7 @@ function processLogin(user, pass, isAuto) {
             if (!data.currentDevice || data.currentDevice === "") {
                 db.ref("users/" + user + "/currentDevice").set(deviceId);
             } else if (data.currentDevice !== deviceId) {
-                showUI();
+                
                 msg.style.color = "red"; msg.innerText = "⚠ حسابك مرتبط بجهاز آخر"; return;
             }
             if(data.password && data.password.toString() === pass) {
@@ -180,11 +301,11 @@ function processLogin(user, pass, isAuto) {
                 localStorage.setItem("pass", pass);
                 if(window.Android) { window.Android.closeWindow(); }
             } else {
-                showUI(); 
+                 
                 if(!isAuto) { msg.style.color = "yellow"; msg.innerText = "الباسورد خطأ"; }
             }
         } else {
-            showUI(); 
+            
             if(!isAuto) { msg.style.color = "yellow"; msg.innerText = "المستخدم غير موجود"; }
         }
     }).catch(() => showUI());
@@ -194,82 +315,106 @@ function processLogin(user, pass, isAuto) {
 // نظام التحكم بالريموت (TV Navigation System)
 // ==========================================
 let focusableElements = [];
+let contactIcons = [];
 let currentIndex = 0;
+let onContactIcons = false;
 
 function updateFocusableElements() {
-    // جلب العناصر الظاهرة فقط للتحكم بها
+    // الحقول والأزرار
     focusableElements = Array.from(document.querySelectorAll('.tv-focusable')).filter(el => {
         return window.getComputedStyle(el).display !== 'none' && window.getComputedStyle(el.parentElement).display !== 'none';
     });
+    // أيقونات الاتصال
+    contactIcons = Array.from(document.querySelectorAll('.contact-icons a'));
+    
     if(focusableElements.length > 0) {
         currentIndex = 0;
+        onContactIcons = false;
         focusableElements[currentIndex].focus();
     }
 }
 
 document.addEventListener('keydown', function(e) {
-    if (focusableElements.length === 0) return;
+    if(onContactIcons) {
+        // التنقل بين أيقونات الاتصال
+        switch(e.keyCode){
+            case 37: // يسار
+                currentIndex = (currentIndex > 0) ? currentIndex - 1 : contactIcons.length - 1;
+                contactIcons[currentIndex].focus();
+                e.preventDefault();
+                break;
+            case 39: // يمين
+                currentIndex = (currentIndex < contactIcons.length - 1) ? currentIndex + 1 : 0;
+                contactIcons[currentIndex].focus();
+                e.preventDefault();
+                break;
+            case 40: // تحت -> العودة للحقول
+                onContactIcons = false;
+                currentIndex = 0;
+                focusableElements[currentIndex].focus();
+                e.preventDefault();
+                break;
+            case 13: // Enter
+                contactIcons[currentIndex].click();
+                e.preventDefault();
+                break;
+        }
+        return;
+    }
+
+    if(focusableElements.length === 0) return;
 
     switch(e.keyCode) {
-        case 38: // سهم فوق
-            if (currentIndex > 0) {
-                // التعامل مع الأزرار المتجاورة أفقياً
-                if(focusableElements[currentIndex].id === "logBtn" && focusableElements[currentIndex - 1].id === "regBtn"){
-                     currentIndex = currentIndex - 2; // تخطي الزر المجاور والذهاب للحقل الأعلى
-                } else {
-                     currentIndex--;
-                }
+        case 38: // فوق
+            if(currentIndex === 0 && contactIcons.length > 0){
+                // الصعود إلى أيقونات الاتصال
+                onContactIcons = true;
+                currentIndex = 0;
+                contactIcons[currentIndex].focus();
+                e.preventDefault();
+                break;
             }
-            focusableElements[currentIndex].focus();
+            if (currentIndex > 0) { currentIndex--; focusableElements[currentIndex].focus(); }
             e.preventDefault();
             break;
-            
-        case 40: // سهم تحت
-            if (currentIndex < focusableElements.length - 1) {
-                if(focusableElements[currentIndex].id === "regBtn" && focusableElements[currentIndex + 1].id === "logBtn"){
-                     currentIndex = currentIndex + 2; // تخطي الزر المجاور للأسفل
-                } else {
-                     currentIndex++;
-                }
-                if (currentIndex >= focusableElements.length) currentIndex = focusableElements.length - 1;
-            }
-            focusableElements[currentIndex].focus();
+        case 40: // تحت
+            if (currentIndex < focusableElements.length - 1) { currentIndex++; focusableElements[currentIndex].focus(); }
             e.preventDefault();
             break;
-
-        case 37: // سهم يسار (للتنقل بين الأزرار المتجاورة)
+        case 37: // يسار
             if(focusableElements[currentIndex].id === "regBtn" && document.getElementById('logBtn').style.display !== 'none') {
                 currentIndex = focusableElements.indexOf(document.getElementById('logBtn'));
                 focusableElements[currentIndex].focus();
             }
             e.preventDefault();
             break;
-
-        case 39: // سهم يمين (للتنقل بين الأزرار المتجاورة)
+        case 39: // يمين
             if(focusableElements[currentIndex].id === "logBtn") {
                 currentIndex = focusableElements.indexOf(document.getElementById('regBtn'));
                 focusableElements[currentIndex].focus();
             }
             e.preventDefault();
             break;
-
-        case 13: // زر OK / Enter
-            // إذا كان حقل إدخال نتركه يفتح الكيبورد الافتراضي للتلفاز، وإذا كان زر يقوم بالضغط عليه
-            if (document.activeElement.tagName !== 'INPUT') {
-                document.activeElement.click();
-                e.preventDefault();
-            }
+        case 13: // Enter
+            if (document.activeElement.tagName !== 'INPUT') { document.activeElement.click(); e.preventDefault(); }
             break;
-
-        case 4:   // زر الرجوع في بعض شاشات التلفاز الذكية
-        case 27:  // زر Escape من الكيبورد
-            if(window.Android) {
-                window.Android.closeWindow(); // الخروج عبر كلاس الأندرويد
-                e.preventDefault();
-            }
+        case 4: case 27: 
+            if(window.Android) { window.Android.closeWindow(); e.preventDefault(); }
             break;
     }
 });
+function openExternalLink(e, url) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    if (window.Android && window.Android.openIntent) {
+        window.Android.openIntent(url);
+    } else {
+        window.open(url, '_blank');
+    }
+}
+
 </script>
 </body>
 </html>
