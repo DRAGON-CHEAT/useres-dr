@@ -7,27 +7,56 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
     <style>
-        body { background-color: #000; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .dragon-card { background: #111; padding: 30px; border-radius: 15px; border-top: 4px solid #ff0000; width: 320px; text-align: center; box-shadow: 0 0 20px rgba(255,0,0,0.3); }
+        body { background-color: #000; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
+        
+        #loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 9999;
+        }
+        .spinner {
+            width: 50px; height: 50px; border: 5px solid #222;
+            border-top: 5px solid #ff0000; border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(3600deg); } }
+
+        .dragon-card { display: none; background: #111; padding: 30px; border-radius: 15px; border-top: 4px solid #ff0000; width: 320px; text-align: center; box-shadow: 0 0 20px rgba(255,0,0,0.3); }
+        
         h1 { color: #ff0000; margin-bottom: 20px; text-shadow: 0 0 10px #ff0000; }
-        input { width: 100%; padding: 12px; margin-bottom: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; text-align: center; }
-        .btns { display: flex; gap: 5px; }
-        button { flex: 1; padding: 12px; cursor: pointer; font-weight: bold; border-radius: 8px; border: none; transition: 0.3s; }
-        .btn-reg { background: #ff0000; color: white; }
-        .btn-log { background: #333; color: white; }
+        input { width: 100%; padding: 12px; margin-bottom: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; text-align: center; outline: none; }
+        .btns { display: flex; gap: 5px; margin-bottom: 10px; }
+        button { flex: 1; padding: 12px; cursor: pointer; font-weight: bold; border-radius: 8px; border: none; transition: 0.3s; outline: none; }
+        .btn-reg { background: #353570; color: white; }
+        .btn-log { background: #3a7035; color: white; }
+        .btn-out { background: #b00; color: white; display: none; width: 100%; outline: none; }
         #statusMsg { margin-top: 15px; font-size: 14px; min-height: 20px; }
+
+        /* ستايل التركيز الخاص بريموت التلفاز */
+        .tv-focusable:focus {
+            border: 2px solid #ff0000 !important;
+            box-shadow: 0 0 15px #ff0000 !important;
+            transform: scale(1.03);
+        }
     </style>
 </head>
 <body>
 
-<div class="dragon-card">
-    <h1>Dragon TV</h1>
-    <input type="text" id="userField" placeholder="الاسم الثنائي والمواليد">
-    <input type="password" id="passField" placeholder="كلمة المرور">
-    <div class="btns">
-        <button class="btn-reg" onclick="register()">ارسال الطلب</button>
-        <button class="btn-log" onclick="login()">تسجيل دخول</button>
+<div id="loader">
+    <div class="spinner"></div>
+    <p style="margin-top:15px; color:#fff; font-size:18px;">جاري التحقق..</p>
+</div>
+
+<div class="dragon-card" id="mainCard">
+    <h1>DraGon TV</h1>
+    <!-- إضافة كلاس tv-focusable لجميع العناصر القابلة للتفاعل -->
+    <input type="text" id="userField" class="tv-focusable" placeholder="الاسم الثنائي والمواليد">
+    <input type="password" id="passField" class="tv-focusable" placeholder="كلمة المرور">
+    <div id="mainBtns" class="btns">
+        <button id="regBtn" class="btn-reg tv-focusable" onclick="register()">ارسال الطلب</button>
+        <button id="logBtn" class="btn-log tv-focusable" onclick="login()">تسجيل دخول</button>
     </div>
+    <button id="outBtn" class="btn-out tv-focusable" onclick="clearDeviceSession()">تسجيل خروج من الحساب</button>
     <div id="statusMsg"></div>
 </div>
 
@@ -45,49 +74,78 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// 1. توليد بصمة ثابتة للجهاز (لا تتغير أبداً)
-function generatePersistentID() {
-    const info = window.navigator.userAgent + window.navigator.language + window.screen.width + window.screen.height;
-    let hash = 0;
-    for (let i = 0; i < info.length; i++) {
-        hash = (hash << 5) - hash + info.charCodeAt(i);
-        hash |= 0;
+function generateRandomID() {
+    let id = localStorage.getItem('deviceId');
+    if (!id) {
+        id = "DRG-" + Math.floor(Math.random() * 1000000000) + "-" + Math.floor(Math.random() * 1000000000);
+        localStorage.setItem('deviceId', id);
     }
-    return "DRG-" + Math.abs(hash);
+    return id;
+}
+const deviceId = generateRandomID();
+
+function showUI() {
+    document.getElementById('loader').style.display = "none";
+    document.getElementById('mainCard').style.display = "block";
+    updateFocusableElements(); // تحديث القائمة بعد عرض الواجهة
 }
 
-let deviceId = localStorage.getItem('deviceId');
-if (!deviceId) {
-    deviceId = generatePersistentID();
-    localStorage.setItem('deviceId', deviceId);
-}
+window.clearDeviceSession = function() {
+    const user = localStorage.getItem("user");
+    const msg = document.getElementById('statusMsg');
+    if (user) {
+        db.ref("users/" + user).once("value").then((snap) => {
+            const data = snap.val();
+            if (data && data.currentDevice === deviceId) {
+                db.ref("users/" + user + "/currentDevice").set("").then(() => {
+                    localStorage.clear();
+                    alert("تم تسجيل الخروج بنجاح.");
+                    if(window.Android) { window.Android.closeWindow(); } else { location.reload(); }
+                });
+            } else {
+                msg.style.color = "orange";
+                msg.innerText = "⚠ الجهاز غير مطابق لهذا الحساب";
+            }
+        });
+    }
+};
 
-
-
+window.onload = function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isLogoutMode = urlParams.get('action') === 'logout';
     const savedUser = localStorage.getItem("user");
     const savedPass = localStorage.getItem("pass");
-    if(savedUser && savedPass) {
+
+    if(savedUser) {
+        document.getElementById('userField').value = savedUser;
+    }
+
+    if (isLogoutMode && savedUser) {
+        showUI();
+        document.getElementById('userField').readOnly = true;
+        document.getElementById('passField').style.display = "none";
+        document.getElementById('mainBtns').style.display = "none";
+        document.getElementById('outBtn').style.display = "block";
+        updateFocusableElements();
+    } else if(savedUser && savedPass) {
         processLogin(savedUser, savedPass, true);
+    } else {
+        showUI();
     }
 };
 
 function register() {
     const user = document.getElementById('userField').value.trim();
     const msg = document.getElementById('statusMsg');
-    if(user.length < 8) { msg.innerText = "⚠ الاسم يجب أن يكون ثنائي"; return; }
-
+    if(!user) { msg.style.color = "yellow"; msg.innerText = "⚠ يرجى إدخال أسم المستخدم أولاً"; return; }
+    if(user.length < 8) { msg.style.color = "yellow"; msg.innerText = "⚠  الاسم يجب أن يكون ثنائي مع مواليد"; return; }
+    
     db.ref("users/" + user).once("value").then((snap) => {
-        if(snap.exists()) {
-            msg.innerText = "هذا المستخدم موجود بالفعل";
+        if(snap.exists()) { 
+            msg.style.color = "red"; msg.innerText = "⚠ هذا المستخدم موجود بالفعل"; 
         } else {
-            db.ref("users/" + user).set({
-                username: user,
-                currentDevice: deviceId,
-                expirydate: "",
-                password: ""
-            }).then(() => {
-                msg.style.color = "yellow";
-                msg.innerText = "تم إرسال الطلب، يرجى مراسلتنا";
+            db.ref("users/" + user).set({ username: user, currentDevice: deviceId, expirydate: "", password: "" }).then(() => {
+                msg.style.color = "yellow"; msg.innerText = "تم إرسال طلبك بنجاح يرجى مراسلتنا";
             });
         }
     });
@@ -96,52 +154,122 @@ function register() {
 function login() {
     const user = document.getElementById('userField').value.trim();
     const pass = document.getElementById('passField').value.trim();
+    const msg = document.getElementById('statusMsg');
+    if(!user) { msg.style.color = "yellow"; msg.innerText = "⚠ يرجى إدخال اسم المستخدم"; return; }
+    if(!pass) { msg.style.color = "yellow"; msg.innerText = "⚠ يرجى إدخال كلمة المرور"; return; }
     processLogin(user, pass, false);
 }
 
 function processLogin(user, pass, isAuto) {
     const msg = document.getElementById('statusMsg');
-    if(!user || !pass) return;
-
     db.ref("users/" + user).once("value").then((snap) => {
         if(snap.exists()){
             const data = snap.val();
-            
-            // تحقق التاريخ
             if(data.expirydate && new Date(data.expirydate) < new Date()) {
-                db.ref("users/" + user + "/password").set(""); 
-                localStorage.removeItem("user");
-                localStorage.removeItem("pass");
-                msg.innerText = "⚠ انتهى اشتراكك";
-                return;
+                showUI();
+                msg.style.color = "yellow"; msg.innerText = "⚠ انتهى اشتراكك"; return;
             }
-
-            // تحقق الجهاز (تبديل تلقائي إذا كانت الخانة فارغة)
             if (!data.currentDevice || data.currentDevice === "") {
                 db.ref("users/" + user + "/currentDevice").set(deviceId);
             } else if (data.currentDevice !== deviceId) {
-                msg.style.color = "red";
-                msg.innerText = "⚠ حسابك مفتوح على جهاز آخر";
-                return;
+                showUI();
+                msg.style.color = "red"; msg.innerText = "⚠ حسابك مرتبط بجهاز آخر"; return;
             }
-
-            // تحقق الباسورد
             if(data.password && data.password.toString() === pass) {
                 localStorage.setItem("user", user);
                 localStorage.setItem("pass", pass);
-                if(!isAuto) {
-                    msg.style.color = "lime";
-                    msg.innerText = "تم التحقق بنجاح..";
-                }
-                setTimeout(() => {
-                    if(window.Android) { window.Android.closeWindow(); }
-                }, 1000);
+                if(window.Android) { window.Android.closeWindow(); }
             } else {
-                msg.innerText = "الباسورد خطأ";
+                showUI(); 
+                if(!isAuto) { msg.style.color = "yellow"; msg.innerText = "الباسورد خطأ"; }
             }
+        } else {
+            showUI(); 
+            if(!isAuto) { msg.style.color = "yellow"; msg.innerText = "المستخدم غير موجود"; }
         }
-    });
+    }).catch(() => showUI());
 }
+
+// ==========================================
+// نظام التحكم بالريموت (TV Navigation System)
+// ==========================================
+let focusableElements = [];
+let currentIndex = 0;
+
+function updateFocusableElements() {
+    // جلب العناصر الظاهرة فقط للتحكم بها
+    focusableElements = Array.from(document.querySelectorAll('.tv-focusable')).filter(el => {
+        return window.getComputedStyle(el).display !== 'none' && window.getComputedStyle(el.parentElement).display !== 'none';
+    });
+    if(focusableElements.length > 0) {
+        currentIndex = 0;
+        focusableElements[currentIndex].focus();
+    }
+}
+
+document.addEventListener('keydown', function(e) {
+    if (focusableElements.length === 0) return;
+
+    switch(e.keyCode) {
+        case 38: // سهم فوق
+            if (currentIndex > 0) {
+                // التعامل مع الأزرار المتجاورة أفقياً
+                if(focusableElements[currentIndex].id === "logBtn" && focusableElements[currentIndex - 1].id === "regBtn"){
+                     currentIndex = currentIndex - 2; // تخطي الزر المجاور والذهاب للحقل الأعلى
+                } else {
+                     currentIndex--;
+                }
+            }
+            focusableElements[currentIndex].focus();
+            e.preventDefault();
+            break;
+            
+        case 40: // سهم تحت
+            if (currentIndex < focusableElements.length - 1) {
+                if(focusableElements[currentIndex].id === "regBtn" && focusableElements[currentIndex + 1].id === "logBtn"){
+                     currentIndex = currentIndex + 2; // تخطي الزر المجاور للأسفل
+                } else {
+                     currentIndex++;
+                }
+                if (currentIndex >= focusableElements.length) currentIndex = focusableElements.length - 1;
+            }
+            focusableElements[currentIndex].focus();
+            e.preventDefault();
+            break;
+
+        case 37: // سهم يسار (للتنقل بين الأزرار المتجاورة)
+            if(focusableElements[currentIndex].id === "regBtn" && document.getElementById('logBtn').style.display !== 'none') {
+                currentIndex = focusableElements.indexOf(document.getElementById('logBtn'));
+                focusableElements[currentIndex].focus();
+            }
+            e.preventDefault();
+            break;
+
+        case 39: // سهم يمين (للتنقل بين الأزرار المتجاورة)
+            if(focusableElements[currentIndex].id === "logBtn") {
+                currentIndex = focusableElements.indexOf(document.getElementById('regBtn'));
+                focusableElements[currentIndex].focus();
+            }
+            e.preventDefault();
+            break;
+
+        case 13: // زر OK / Enter
+            // إذا كان حقل إدخال نتركه يفتح الكيبورد الافتراضي للتلفاز، وإذا كان زر يقوم بالضغط عليه
+            if (document.activeElement.tagName !== 'INPUT') {
+                document.activeElement.click();
+                e.preventDefault();
+            }
+            break;
+
+        case 4:   // زر الرجوع في بعض شاشات التلفاز الذكية
+        case 27:  // زر Escape من الكيبورد
+            if(window.Android) {
+                window.Android.closeWindow(); // الخروج عبر كلاس الأندرويد
+                e.preventDefault();
+            }
+            break;
+    }
+});
 </script>
 </body>
 </html>
