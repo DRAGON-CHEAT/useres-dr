@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>Dragon TV Services</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    
+    <style>
+        body { 
+    background-image: url('background.jpg'); 
+    background-size: cover; 
+    background-position: center; 
+    background-repeat: no-repeat; 
+    color: white; 
+    font-family: sans-serif; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    height: 100vh; 
+    margin: 0; 
+    overflow: hidden; 
+}
+        .dragon-card { background: #111; padding: 30px; border-radius: 15px; border-top: 4px solid #0080ff; width: 320px; text-align: center; box-shadow: 0 0 30px rgba(0,128,255,0.5); }
+        h1 { color: #0080ff; margin-bottom: 20px; text-shadow: 0 0 10px #0080ff; }
+        input { width: 100%; padding: 12px; margin-bottom: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 8px; font-size: 16px; box-sizing: border-box; text-align: center; }
+
+        button { width: 100%; padding: 12px; cursor: pointer; font-weight: bold; border-radius: 8px; border: none; transition: 0.3s; background: #b00; color: white; }
+        button:hover { background: #ff0000; }
+        #statusMsg { margin-top: 15px; font-size: 14px; min-height: 20px; color: #aaa; font-weight: bold; }
+    </style>
+
+
+</head>
+<body>
+
+<div class="dragon-card">
+    <h1>𝔻ℝ𝔸𝔾𝕆ℕ 𝕊ℍ𝕆𝕎</h1>
+    <input type="text" id="userField" placeholder="الاسم المسجل">
+    <input type="password" id="passField" placeholder="كلمة المرور">
+       <button id="logoutBtn" onclick="clearDeviceSession()">تسجيل خروج (فك ارتباط الجهاز)</button>
+    <div id="statusMsg"></div>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCPVNySqB8Y21s_DJnn-jZFIb77UagAr4k",
+  authDomain: "drag-9user.firebaseapp.com",
+  databaseURL: "https://drag-9user-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "drag-9user",
+  storageBucket: "drag-9user.firebasestorage.app",
+  messagingSenderId: "716759119906",
+  appId: "1:716759119906:web:4b522ed58dba7bf623727b"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// منع الرجوع للخلف في المتصفح/الموبايل
+history.pushState(null, null, location.href);
+window.onpopstate = function () {
+    history.go(1);
+};
+
+// جلب المعرف العشوائي المخزن في الجهاز
+function getLocalDeviceId() {
+    return localStorage.getItem('deviceId');
+}
+
+window.onload = function() {
+    const savedUser = localStorage.getItem("user");
+    const savedPass = localStorage.getItem("pass");
+    if(savedUser) document.getElementById('userField').value = savedUser;
+    if(savedPass) document.getElementById('passField').value = savedPass;
+    
+    // إظهار الرسالة تلقائياً للمستخدم فور فتح النافذة
+    document.getElementById('statusMsg').style.color = "#0080ff";
+    document.getElementById('statusMsg').innerText = "قبل تسجيل الخروج يرجى التأكد من حفظ معلوماتك";
+    
+    document.getElementById('logoutBtn').focus(); 
+};
+
+window.clearDeviceSession = function() {
+    const user = document.getElementById('userField').value.trim();
+    const pass = document.getElementById('passField').value.trim();
+    const msg = document.getElementById('statusMsg');
+    const deviceId = getLocalDeviceId();
+
+    if(!user || !pass) {
+        msg.style.color = "#ffeb3b";
+        msg.innerText = "⚠ يرجى إدخال البيانات كاملة";
+        return;
+    }
+
+    msg.style.color = "#aaa";
+    msg.innerText = "جاري التحقق...";
+
+    db.ref("users/" + user).once("value").then((snap) => {
+        if (snap.exists()) {
+            const data = snap.val();
+            
+            if (data.password && data.password.toString() === pass) {
+                if (data.currentDevice === deviceId) {
+                    db.ref("users/" + user + "/currentDevice").set("").then(() => {
+                        localStorage.removeItem("user");
+                        localStorage.removeItem("pass");
+                        msg.style.color = "lime";
+                        msg.innerText = "✅ تم فك الارتباط بنجاح! يمكنك الدخول من جهاز آخر.";
+                        
+                        // إغلاق النافذة بعد ثانيتين إذا كان التطبيق يدعم ذلك
+                        setTimeout(() => {
+                            if(window.Android && window.Android.closeWindow) window.Android.closeWindow();
+                        }, 2500);
+                    });
+                } else {
+                    msg.style.color = "red";
+                    msg.innerText = "⚠ هذا الجهاز غير مرتبط بهذا الحساب";
+                }
+            } else {
+                msg.style.color = "yellow";
+                msg.innerText = "⚠ كلمة المرور غير صحيحة";
+            }
+        } else {
+            msg.style.color = "yellow";
+            msg.innerText = "⚠ المستخدم غير موجود";
+        }
+    }).catch(e => {
+        msg.style.color = "red";
+        msg.innerText = "⚠ خطأ في الاتصال بقاعدة البيانات";
+    });
+};
+</script>
+</body>
+</html>
